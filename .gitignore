@@ -1,0 +1,22 @@
+# Client
+client/node_modules/
+client/dist/
+client/.env
+
+# Server
+server/venv/
+server/__pycache__/
+server/.env
+server/chroma_db/
+
+# Python
+*.pyc
+__pycache__/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
