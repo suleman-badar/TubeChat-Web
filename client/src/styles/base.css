@@ -1,0 +1,78 @@
+:root {
+  --bg: #100f0d;
+  --bg-soft: #181512;
+  --panel: rgba(22, 20, 18, 0.86);
+  --panel-solid: #1c1916;
+  --panel-strong: #231f1b;
+  --text: #f2ede4;
+  --text-muted: #c9c0b3;
+  --text-soft: #9f9586;
+  --border: rgba(255, 245, 230, 0.1);
+  --border-strong: rgba(255, 186, 115, 0.22);
+  --accent: #ef8a3b;
+  --accent-2: #d4a373;
+  --accent-3: #8ea37c;
+  --accent-soft: rgba(239, 138, 59, 0.12);
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+  --radius-xl: 32px;
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+  --sans: 'Aptos', 'Trebuchet MS', 'Segoe UI', sans-serif;
+  --display: 'Aptos Display', 'Trebuchet MS', 'Segoe UI', sans-serif;
+  --mono: 'Cascadia Mono', 'SFMono-Regular', Consolas, monospace;
+
+  font: 16px/1.5 var(--sans);
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(239, 138, 59, 0.24), transparent 28%),
+    radial-gradient(circle at top right, rgba(142, 163, 124, 0.16), transparent 24%),
+    linear-gradient(180deg, #151210 0%, #100f0d 100%);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  background: inherit;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--display);
+  line-height: 1.05;
+}
