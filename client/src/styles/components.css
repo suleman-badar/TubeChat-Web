@@ -1,0 +1,188 @@
+.eyebrow {
+  margin: 0 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  font-size: 0.74rem;
+  color: var(--accent-2);
+}
+
+h1 {
+  max-width: 12ch;
+  font-size: clamp(2.5rem, 4vw, 4.8rem);
+  letter-spacing: -0.05em;
+}
+
+h2 {
+  font-size: clamp(1.8rem, 2.8vw, 3rem);
+  letter-spacing: -0.04em;
+}
+
+h3 {
+  font-size: 1.25rem;
+}
+
+.lead {
+  max-width: 58ch;
+  color: var(--text-muted);
+  font-size: 1.05rem;
+}
+
+.nav-link,
+.secondary-button,
+.primary-button {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease,
+    opacity 160ms ease;
+}
+
+.nav-link,
+.secondary-button {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  padding: 0.8rem 1rem;
+}
+
+.nav-link:hover,
+.secondary-button:hover,
+.primary-button:hover {
+  transform: translateY(-1px);
+}
+
+.nav-link.active {
+  border-color: var(--border-strong);
+  background: rgba(239, 138, 59, 0.12);
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(20px);
+}
+
+.field-label,
+.info-label,
+.message-role {
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.text-input {
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--panel-strong);
+  color: var(--text);
+  padding: 1rem 1rem;
+  outline: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.text-input::placeholder {
+  color: #857b6d;
+}
+
+.text-input:focus {
+  border-color: rgba(239, 138, 59, 0.5);
+  box-shadow: 0 0 0 4px rgba(239, 138, 59, 0.12);
+}
+
+.text-area {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.primary-button {
+  background: linear-gradient(135deg, #ef8a3b, #c96a35);
+  color: #1c120c;
+  padding: 0.95rem 1.3rem;
+  font-weight: 700;
+  box-shadow: 0 16px 34px rgba(239, 138, 59, 0.22);
+}
+
+.primary-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.secondary-button {
+  align-self: start;
+  border-color: var(--border);
+}
+
+.status-message {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.status-message.success {
+  background: rgba(142, 163, 124, 0.12);
+  border-color: rgba(142, 163, 124, 0.28);
+}
+
+.status-message.error {
+  background: rgba(196, 87, 87, 0.12);
+  border-color: rgba(196, 87, 87, 0.3);
+  color: #ffcdc6;
+}
+
+.info-block {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.message {
+  max-width: 86%;
+  display: grid;
+  gap: 0.5rem;
+  padding: 1rem 1.1rem;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.user-message {
+  margin-left: auto;
+  background: rgba(239, 138, 59, 0.12);
+  border-color: rgba(239, 138, 59, 0.25);
+}
+
+.assistant-message {
+  background: rgba(142, 163, 124, 0.1);
+  border-color: rgba(142, 163, 124, 0.22);
+}
+
+.message p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--text-muted);
+}
+
+.empty-state {
+  display: grid;
+  gap: 0.45rem;
+  padding: 1.1rem;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-strong);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-muted);
+}

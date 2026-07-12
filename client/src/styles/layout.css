@@ -1,0 +1,149 @@
+.app-shell {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 28px 0 40px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: end;
+  margin-bottom: 24px;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.content-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.page-card {
+  display: grid;
+  gap: 20px;
+}
+
+.hero-card {
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  min-height: calc(100vh - 150px);
+}
+
+.chat-layout {
+  grid-template-columns: minmax(270px, 0.78fr) minmax(0, 1.22fr);
+}
+
+.chat-shell {
+  height: calc(100svh - 126px);
+  overflow: hidden;
+}
+
+.hero-copy,
+.chat-sidebar,
+.chat-panel,
+.form-panel {
+  padding: 28px;
+}
+
+.hero-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+  gap: 18px;
+  border-radius: var(--radius-xl);
+  background:
+    linear-gradient(180deg, rgba(239, 138, 59, 0.12), rgba(239, 138, 59, 0.02)),
+    radial-gradient(circle at bottom right, rgba(142, 163, 124, 0.16), transparent 34%);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.form-panel,
+.chat-panel,
+.chat-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 0;
+}
+
+.chat-panel {
+  height: 100%;
+  overflow: hidden;
+}
+
+.chat-form {
+  display: grid;
+  gap: 14px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+.message-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+@media (max-width: 980px) {
+  .topbar,
+  .hero-card,
+  .chat-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    display: grid;
+    align-items: start;
+  }
+
+  .hero-card,
+  .chat-layout {
+    min-height: auto;
+  }
+
+  .chat-shell {
+    height: auto;
+    overflow: visible;
+  }
+
+  .chat-panel {
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .message {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    width: min(100%, calc(100% - 20px));
+    padding: 12px 0 24px;
+  }
+
+  .hero-copy,
+  .chat-sidebar,
+  .chat-panel,
+  .form-panel {
+    padding: 20px;
+  }
+
+  .topbar-actions {
+    width: 100%;
+  }
+
+  .nav-link,
+  .secondary-button,
+  .primary-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
