@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers.video import router as video_router
-from app.routers.chat import router as chat_router
+from server.app.routers.video_router import router as video_router
+from server.app.routers.chat_router import router as chat_router
 
 
 app = FastAPI()
