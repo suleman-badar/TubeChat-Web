@@ -12,9 +12,9 @@ from app.schemas.chat_schema import (
     ChatResponse,
     ChatSessionInfo,
     ChatSessionResponse,
-    RecentChatSessionResponse,
     MessageResponse,
 )
+from app.schemas.video_schema import RecentChatSessionResponse
 
 from app.services.vector_store import get_retriever
 from app.services.rag import create_rag_pipeline

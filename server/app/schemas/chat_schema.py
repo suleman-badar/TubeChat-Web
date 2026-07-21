@@ -70,12 +70,3 @@ class ChatSessionResponse(BaseModel):
     messages: list[MessageResponse]
 
 
-class RecentChatSessionResponse(BaseModel):
-    id: UUID
-    title: str
-    youtube_id: str
-    updated_at: datetime
-
-    model_config = {
-        "from_attributes": True,
-    }
