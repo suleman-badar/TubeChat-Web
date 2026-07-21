@@ -6,7 +6,8 @@ from langchain_openai import ChatOpenAI
 from langchain_core.runnables import RunnableLambda, RunnableParallel
 from dotenv import load_dotenv
 
-load_dotenv()  
+load_dotenv()
+
 
 @lru_cache(maxsize=1)
 def get_embeddings():
@@ -30,11 +31,14 @@ def create_rag_pipeline(retriever):
     )
 
     question = RunnableLambda(lambda inputs: inputs["question"])
-    retrieve_documents = RunnableLambda(lambda inputs: retriever.invoke(inputs["question"]))
+    retrieve_documents = RunnableLambda(
+        lambda inputs: retriever.invoke(inputs["question"])
+    )
 
     rag_pipeline = (
         RunnableParallel(
-            context=retrieve_documents | RunnableLambda(lambda docs: "\n".join(doc.page_content for doc in docs)),
+            context=retrieve_documents
+            | RunnableLambda(lambda docs: "\n".join(doc.page_content for doc in docs)),
             question=question,
         )
         | prompt

@@ -8,10 +8,8 @@ from typing import TYPE_CHECKING
 
 from app.database.base_model import Base
 
-
 if TYPE_CHECKING:
     from app.database.models.chat_session_model import ChatSession
-
 
 
 class Video(Base):
@@ -30,28 +28,9 @@ class Video(Base):
         index=True,
     )
 
-    title: Mapped[str] = mapped_column(
-        String(255),
-        nullable=False,
-    )
-
-    thumbnail: Mapped[str | None] = mapped_column(
-        String(500)
-    )
-
-    channel: Mapped[str | None] = mapped_column(
-        String(255)
-    )
-
     indexed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
     )
 
-    last_opened: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True)
-    )
-
-    chat_sessions: Mapped[list["ChatSession"]] = relationship(
-        back_populates="video"
-    )
+    chat_sessions: Mapped[list["ChatSession"]] = relationship(back_populates="video")

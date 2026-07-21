@@ -1,87 +1,206 @@
-import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { ChatComposer } from '../components/ChatComposer'
-import { ChatMessageList } from '../components/ChatMessageList'
-import { ChatSidebar } from '../components/ChatSidebar'
-import { chatWithVideo } from '../services/api'
-import { useVideoId } from '../hooks/useVideoId'
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useSearchParams } from "react-router-dom";
+
+import { ChatComposer } from "../components/ChatComposer";
+import { ChatMessageList } from "../components/ChatMessageList";
+import { ChatSidebar } from "../components/ChatSidebar";
+
+import {
+  chat,
+  getChatSession,
+  getVideoChatSessions,
+} from "../services/api";
 
 function formatError(error) {
-  if (error instanceof Error) {
-    return error.message
-  }
-
-  return 'Something went wrong. Please try again.'
+  return error instanceof Error
+    ? error.message
+    : "Something went wrong.";
 }
 
 export function ChatPage({ navigate }) {
-  const videoId = useVideoId()
-  const [isLoading, setIsLoading] = useState(false)
-  const [apiError, setApiError] = useState('')
-  const [messages, setMessages] = useState([])
-  const { register, handleSubmit, formState: { errors }, reset } = useForm({
+
+  const [searchParams] = useSearchParams();
+
+  const queryYoutubeId = searchParams.get("youtube_id");
+  const sessionId = searchParams.get("session_id");
+  const [youtubeId, setYoutubeId] = useState(queryYoutubeId);
+  const [messages, setMessages] = useState([]);
+  const [sessions, setSessions] = useState([]);
+  const [apiError, setApiError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
     defaultValues: {
-      question: '',
+      question: "",
     },
-  })
+  });
 
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+  //
+  // Disable page scrolling
+  //
+  // useEffect(() => {
 
-    return () => {
-      document.body.style.overflow = previousOverflow
-    }
-  }, [])
+  //   const previous = document.body.style.overflow;
 
-  const onSubmit = async ({ question }) => {
-    if (!videoId) {
-      setApiError('No video_id found in the URL. Go back and index a video first.')
-      return
-    }
+  //   document.body.style.overflow = "hidden";
 
-    setIsLoading(true)
-    setApiError('')
+  //   return () => {
+  //     document.body.style.overflow = previous;
+  //   };
 
-    const userMessage = { role: 'user', content: question }
-    setMessages((currentMessages) => [...currentMessages, userMessage])
+  // }, []);
 
+  //
+  // Load one chat session
+  //
+
+
+
+  async function loadConversation(sessionId) {
     try {
-      const data = await chatWithVideo(videoId, question)
-
-      const answerContent =
-        typeof data?.response === 'string'
-          ? data.response
-          : data?.response?.content || JSON.stringify(data?.response || data)
-
-      setMessages((currentMessages) => [
-        ...currentMessages,
-        { role: 'assistant', content: answerContent },
-      ])
-      reset()
-    } catch (caughtError) {
-      setApiError(formatError(caughtError))
-    } finally {
-      setIsLoading(false)
+      const data =
+        await getChatSession(sessionId);
+      setMessages(data.messages);
+      console.log("YOUTUBE ID IN CHAT PAGE", data.session.youtube_id);
+      setYoutubeId(data.session.youtube_id);
+    }
+    catch (error) {
+      setApiError(
+        formatError(error)
+      );
     }
   }
 
+  useEffect(() => {
+    if (!sessionId)
+      return;
+
+    loadConversation(sessionId);
+
+  }, [sessionId]);
+
+  //
+  // Load sidebar
+  //
+  useEffect(() => {
+    if (!youtubeId)
+      return;
+
+    async function loadSessions() {
+      try {
+        const data = await getVideoChatSessions(youtubeId);
+        setSessions(data);
+      }
+      catch (error) {
+        setApiError(
+          formatError(error)
+        );
+      }
+    }
+    loadSessions();
+  }, [youtubeId]);
+
+  async function onSubmit({
+    question,
+  }) {
+
+    if (!youtubeId)
+      return;
+
+    setApiError("");
+    setIsLoading(true);
+
+    const userMessage = {
+      role: "user",
+      content: question,
+    };
+
+    setMessages((current) => [
+      ...current,
+      userMessage,
+    ]);
+
+    try {
+      const data = await chat({
+        youtubeId: youtubeId,
+        sessionId: sessionId,
+        question,
+      })
+
+      // New conversation
+      if (!sessionId) {
+        navigate(`/video/chat?session_id=${data.session_id}`, {
+          replace: true,
+        })
+
+        return
+      }
+
+      // Existing conversation
+      setMessages((current) => [
+        ...current,
+        {
+          role: "assistant",
+          content: data.answer,
+        },
+      ])
+    }
+    catch (error) {
+      setApiError(
+        formatError(error)
+      );
+    }
+    finally {
+      setIsLoading(false);
+    }
+  }
+
+  function handleSessionClick(id) {
+    navigate(
+      `/video/chat?session_id=${id}`
+    );
+
+  }
+
+  function handleNewChat() {
+    if (!youtubeId)
+      return;
+    setMessages([]);
+    navigate(
+      `/video/chat?youtube_id=${youtubeId}`
+    );
+  }
+
   return (
-    <section className="page-card chat-layout chat-shell">
-      <ChatSidebar videoId={videoId} navigate={navigate} />
-
+    <section
+      className="page-card chat-layout chat-shell"
+    >
+      <ChatSidebar
+        youtubeId={youtubeId}
+        sessions={sessions}
+        currentSessionId={sessionId}
+        onSessionClick={handleSessionClick}
+        onNewChat={handleNewChat}
+      />
       <section className="panel chat-panel">
-        <ChatMessageList messages={messages} />
-
+        <ChatMessageList
+          messages={messages}
+        />
         <ChatComposer
           register={register}
           errors={errors}
           onSubmit={handleSubmit(onSubmit)}
           isLoading={isLoading}
-          isDisabled={!videoId}
+          isDisabled={!youtubeId}
           apiError={apiError}
         />
       </section>
     </section>
-  )
+  );
 }

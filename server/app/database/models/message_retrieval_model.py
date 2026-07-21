@@ -1,15 +1,14 @@
 from typing import TYPE_CHECKING
 from sqlalchemy import DateTime, ForeignKey, JSON, Text, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.database.base import Base
+from app.database.base_model import Base
 import uuid
 from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, JSON, Text, Uuid, func
-  
 
 if TYPE_CHECKING:
-    from app.database.models.message import Message
+    from app.database.models.message_model import Message
 
 
 class MessageRetrieval(Base):
@@ -29,4 +28,3 @@ class MessageRetrieval(Base):
     )
 
     message: Mapped["Message"] = relationship(back_populates="retrieval")
-    

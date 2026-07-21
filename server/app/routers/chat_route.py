@@ -1,39 +1,48 @@
-from fastapi import APIRouter
-from pydantic import BaseModel, Field
+from uuid import UUID
 
-from app.services.vector_store import get_retriever
-from app.services.rag import create_rag_pipeline
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from app.database.database import get_db
+from app.schemas.chat_schema import ChatSessionResponse, ChatResponse, ChatRequest
+from app.services.chat_service import (
+    send_message,
+    get_chat_session,
+    get_recent_chat_sessions,
+)
+
+router = APIRouter(prefix="/chat", tags=["Chat"])
 
 
-router = APIRouter()
+# @router.get("/")
+# def chat():
+#     return {"message": "Chat API"}
 
 
-class ChatRequest(BaseModel):
-    video_id: str = Field(..., description="The ID of the video to chat about")
-    question: str = Field(..., description="The question to ask the bot")
+@router.post("/messages", response_model=ChatResponse)
+def send_message_route(
+    request: ChatRequest,
+    db: Session = Depends(get_db),
+):
+    return send_message(request, db)
 
 
-@router.get("/")      
-def chat():
-    return {
-        "message": "This endpoint will show the user a form ot chat with the bot"
-    }
+@router.get(
+    "/chat-sessions/{session_id}",
+    response_model=ChatSessionResponse,
+)
+def get_session(
+    session_id: UUID,
+    db: Session = Depends(get_db),
+):
+    return get_chat_session(session_id, db)
 
-@router.post("/")      
-def chat(chat: ChatRequest):
-    video_id = chat.video_id
-    question = chat.question
-    retriever = get_retriever(video_id)
-    if(retriever):
-        rag_pipeline, prompt, llm = create_rag_pipeline(retriever)
-        response = rag_pipeline.invoke({"question": question})
-        return {
-            "response": response,
-            "video_id": video_id,
-            "question": question
-        }
-    else:
-        return {
-            "error": "Retriever not found for the given video ID"
-        }
 
+@router.get(
+    "/chat-sessions/recent",
+    response_model=list[ChatSessionResponse],
+)
+def recent_sessions(
+    db: Session = Depends(get_db),
+):
+    return get_recent_chat_sessions(db)

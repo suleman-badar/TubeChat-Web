@@ -1,6 +1,7 @@
 from urllib.parse import urlparse, parse_qs
 
-def extract_video_id(url: str):
+
+def extract_youtube_id(url: str):
     parsed = urlparse(url)
 
     # Standard youtube.com/watch?v=...

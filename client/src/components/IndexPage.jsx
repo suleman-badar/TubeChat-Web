@@ -30,7 +30,6 @@ export function IndexPage({ navigate }) {
 
     try {
       const data = await indexVideo(videoUrl)
-      console.log('Index video response:', data)
 
       if (data?.youtube_id) {
         const nextUrl = `/chat?youtube_id=${encodeURIComponent(data.youtube_id)}`
@@ -50,7 +49,7 @@ export function IndexPage({ navigate }) {
 
   return (
     <section className="page-card hero-card">
-      <div >
+      <div className="hero-copy">
       <ChatSidebar youtubeId={result?.youtubeId} navigate={navigate} />
       </div>
 
