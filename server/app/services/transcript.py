@@ -10,6 +10,11 @@ def fetch_transcript(youtube_id: str):
     return transcript
 
 
+# no need to create Document obj for each snippet, coz each snipper is already very small.
+# It will not create any meaningful chunk. Instead, we will create # a single Document object
+# for the entire transcript# and then split it into chunks using the RecursiveCharacterTextSplitter.
+
+
 def split_transcript(transcript, youtube_id: str) -> list[Document]:
     """Split transcript into chunks."""
     splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
