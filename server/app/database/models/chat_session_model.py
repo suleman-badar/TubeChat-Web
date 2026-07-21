@@ -45,3 +45,8 @@ class ChatSession(Base):
 
     user: Mapped["User"] = relationship(back_populates="chat_sessions")
     video: Mapped["Video"] = relationship(back_populates="chat_sessions")
+
+    @property
+    def youtube_id(self) -> str:
+        return self.video.youtube_id
+

@@ -18,6 +18,7 @@ def create_video(
         db.commit()
     except Exception as e:
         db.rollback()
+        raise
 
     db.refresh(video)
 
