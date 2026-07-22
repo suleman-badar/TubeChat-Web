@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.database.models.chat_session_model import ChatSession
-    from app.database.models.message_retrieval_model import MessageRetrieval
 
 
 class MessageRole(str, Enum):
@@ -42,9 +41,3 @@ class Message(Base):
     )
 
     session: Mapped["ChatSession"] = relationship(back_populates="messages")
-
-    retrieval: Mapped["MessageRetrieval | None"] = relationship(
-        back_populates="message",
-        cascade="all, delete-orphan",
-        uselist=False,
-    )
