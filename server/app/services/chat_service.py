@@ -1,4 +1,5 @@
 from uuid import UUID
+from sqlalchemy import func
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
@@ -6,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.database.models.chat_session_model import ChatSession
 from app.database.models.user_model import User
 from app.database.models.video_model import Video
+from app.database.models.message_model import Message, MessageRole
 
 from app.schemas.chat_schema import (
     ChatRequest,
@@ -28,62 +30,93 @@ def send_message(
     print("youtube_id:", request.youtube_id)
     print("session_id:", request.session_id)
 
-    # ---------------------------------------------------------
-    # Temporary single-user implementation
-    # Replace this with current_user after JWT
-    # ---------------------------------------------------------
+    try:
+        # ---------------------------------------------------------
+        # Temporary single-user implementation
+        # Replace this with current_user after JWT
+        # ---------------------------------------------------------
 
-    user = db.query(User).first()
+        user = db.query(User).first()
 
-    if user is None:
-        raise HTTPException(status_code=500, detail="No user found.")
+        if user is None:
+            raise HTTPException(status_code=500, detail="No user found.")
 
-    # ---------------------------------------------------------
-    # Existing chat
-    # ---------------------------------------------------------
+        # ---------------------------------------------------------
+        # Existing chat
+        # ---------------------------------------------------------
 
-    if request.session_id:
-        session = (
-            db.query(ChatSession).filter(ChatSession.id == request.session_id).first()
-        )
-        if session is None:
-            raise HTTPException(status_code=404, detail="Chat session not found.")
-        video = session.video
-    # ---------------------------------------------------------
-    # New chat
-    # ---------------------------------------------------------
-    else:
-        if request.youtube_id is None:
-            raise HTTPException(
-                status_code=400, detail="youtube_id is required for a new chat."
+        if request.session_id:
+            session = (
+                db.query(ChatSession)
+                .filter(ChatSession.id == request.session_id)
+                .first()
             )
-        video = db.query(Video).filter(Video.youtube_id == request.youtube_id).first()
-        if video is None:
-            raise HTTPException(status_code=404, detail="Video not found.")
-        session = ChatSession(
-            user_id=user.id,
-            video_id=video.id,
+            if session is None:
+                raise HTTPException(status_code=404, detail="Chat session not found.")
+            video = session.video
+        # ---------------------------------------------------------
+        # New chat
+        # ---------------------------------------------------------
+        else:
+            if request.youtube_id is None:
+                raise HTTPException(
+                    status_code=400, detail="youtube_id is required for a new chat."
+                )
+            video = (
+                db.query(Video).filter(Video.youtube_id == request.youtube_id).first()
+            )
+            if video is None:
+                raise HTTPException(status_code=404, detail="Video not found.")
+            session = ChatSession(
+                user_id=user.id,
+                video_id=video.id,
+            )
+
+            db.add(session)
+            db.flush()  # Ensure session.id is available before adding messages
+
+            # db.commit()
+            # db.refresh(session)
+        # ---------------------------------------------------------
+        # RAG
+        # ---------------------------------------------------------
+        user_message = Message(
+            session_id=session.id,
+            role=MessageRole.USER,
+            content=request.question,
+        )
+        db.add(user_message)
+
+        retriever = get_retriever(video.youtube_id)
+
+        rag_pipeline, _, _ = create_rag_pipeline(retriever)
+        answer = rag_pipeline.invoke(
+            {
+                "question": request.question,
+            }
         )
 
-        db.add(session)
+        assistant_message = Message(
+            session_id=session.id,
+            role=MessageRole.ASSISTANT,
+            content=answer.content,
+        )
+        db.add(assistant_message)
+        session.updated_at = func.now()  # Update the session's updated_at timestamp
         db.commit()
-        db.refresh(session)
-    # ---------------------------------------------------------
-    # RAG
-    # ---------------------------------------------------------
-    retriever = get_retriever(video.youtube_id)
-    if retriever is None:
-        raise HTTPException(status_code=404, detail="Retriever not found.")
-    rag_pipeline, _, _ = create_rag_pipeline(retriever)
-    answer = rag_pipeline.invoke(
-        {
-            "question": request.question,
-        }
-    )
-    return ChatResponse(
-        session_id=session.id,
-        answer=answer.content,
-    )
+
+        return ChatResponse(
+            session_id=session.id,
+            answer=answer.content,
+        )
+
+    except HTTPException:
+        db.rollback()
+        raise
+
+    except Exception:
+        db.rollback()
+        raise
 
 
 def get_chat_session(
