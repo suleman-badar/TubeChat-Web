@@ -25,7 +25,7 @@ export function IndexForm({ register, errors, onSubmit, isLoading, apiError, res
       {result ? (
         <div className="status-message success">
           <strong>{result.message}</strong>
-          {result.videoId ? <span>Video ID: {result.videoId}</span> : null}
+          {result.youtubeId ? <span>Video ID: {result.youtubeId}</span> : null}
         </div>
       ) : null}
     </form>

@@ -135,7 +135,7 @@ export function ChatPage({ navigate }) {
 
       // New conversation
       if (!sessionId) {
-        navigate(`/video/chat?session_id=${data.session_id}`, {
+        navigate(`/chat?session_id=${data.session_id}`, {
           replace: true,
         })
 
@@ -163,7 +163,7 @@ export function ChatPage({ navigate }) {
 
   function handleSessionClick(id) {
     navigate(
-      `/video/chat?session_id=${id}`
+      `/chat?session_id=${id}`
     );
 
   }
@@ -173,7 +173,7 @@ export function ChatPage({ navigate }) {
       return;
     setMessages([]);
     navigate(
-      `/video/chat?youtube_id=${youtubeId}`
+      `/chat?youtube_id=${youtubeId}`
     );
   }
 
