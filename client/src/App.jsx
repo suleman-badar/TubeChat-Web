@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-route
 import { HomePage } from "./pages/HomePage";
 import { IndexPage } from "./pages/IndexPage";
 import { ChatPage } from "./pages/ChatPage";
+import { AppShell } from "./components/AppShell";
 
 function AppRoutes() {
   const navigate = useNavigate();
@@ -29,7 +30,9 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AppRoutes />
+      <AppShell>
+        <AppRoutes />
+      </AppShell>
     </BrowserRouter>
   );
 }

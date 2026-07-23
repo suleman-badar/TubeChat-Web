@@ -9,6 +9,7 @@ export function ChatComposer({ register, errors, onSubmit, isLoading, isDisabled
         className="text-input text-area"
         placeholder="What is the main topic of this video?"
         rows="4"
+        disabled={isLoading || isDisabled}
         {...register('question', {
           required: 'Question is required.',
         })}
