@@ -196,6 +196,9 @@ h3 {
 .input-wrapper .text-area {
   padding-right: 44px; /* room for the button */
   resize: none;
+  min-height: 20px;
+  scrollbar-width: none;
+  padding-top: 1px;
 }
 
 .send-button {
@@ -235,4 +238,13 @@ h3 {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer; 
+  padding: 4px 0 12px 0;
+  user-select: none;
 }

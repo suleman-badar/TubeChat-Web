@@ -42,6 +42,7 @@
   height: calc(100vh - 74px);
   width: 100%;
   overflow: hidden;
+  flex: 1;
 }
 
 .hero-copy,
@@ -67,11 +68,14 @@
 .form-panel,
 .chat-panel,
 .chat-sidebar {
+  height: 100vh;
   display: flex;
   flex-direction: column;
   gap: 18px;
   min-height: 0;
+  overflow:hidden;
 }
+
 
 .chat-sidebar {
   border-radius: 0 !important;
@@ -85,7 +89,6 @@
 }
 
 .chat-panel {
-  height: 100%;
   overflow: hidden;
   border-radius: 0 !important;
   border: none !important;
@@ -237,7 +240,35 @@
   flex-direction: column;
   gap: .75rem;
   margin-top: 1rem;
+  flex: 1 1 0%; 
+  overflow-y: auto;
+  min-height: 0;
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none; 
 }
+
+.chat-session-list {
+  background-color: rgb(24, 21, 18) !important;
+  background-image:
+    /* Covers to hide dividers at scroll ends */
+    linear-gradient(to bottom, rgb(24, 21, 18) 15px, rgba(24, 21, 18, 0)),
+    linear-gradient(to top, rgb(24, 21, 18) 15px, rgba(24, 21, 18, 0)),
+    /* Top Line & Glow */
+    linear-gradient(to right, rgba(242, 237, 228, 0) 0%, rgba(242, 237, 228, 0.3) 20%, rgba(242, 237, 228, 0.3) 80%, rgba(242, 237, 228, 0) 100%),
+    radial-gradient(farthest-side at 50% 0, rgba(242, 237, 228, 0.1), rgba(24, 21, 18, 0)),
+    /* Bottom Line & Glow */
+    linear-gradient(to right, rgba(242, 237, 228, 0) 0%, rgba(242, 237, 228, 0.3) 20%, rgba(242, 237, 228, 0.3) 80%, rgba(242, 237, 228, 0) 100%),
+    radial-gradient(farthest-side at 50% 100%, rgba(242, 237, 228, 0.1), rgba(24, 21, 18, 0));
+  background-position: 0 0, 0 100%, 0 0, 0 0, 0 100%, 0 100%;
+  background-repeat: no-repeat;
+  background-size: 100% 40px, 100% 40px, 100% 1px, 100% 15px, 100% 1px, 100% 15px;
+  background-attachment: local, local, scroll, scroll, scroll, scroll;
+}
+
+.chat-session-list::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
 
 .chat-session {
   width: 100%;
@@ -280,6 +311,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  
 }
 
 .app-header {
@@ -362,6 +394,12 @@
   padding: 2rem;
   width: min(1200px, 100%);
   margin: 0 auto;
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;  /* IE and Edge */
+}
+
+.home-container::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
 }
 
 .home-hero {
@@ -510,6 +548,7 @@
   flex-direction: column;
   gap: 2rem;
   box-shadow: var(--shadow);
+  height: 80vh;
 }
 
 .index-copy {

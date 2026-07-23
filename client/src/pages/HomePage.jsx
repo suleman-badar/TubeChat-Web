@@ -35,7 +35,7 @@ export function HomePage({ navigate }) {
       <section className="home-hero">
         <h1>Interact with any YouTube Video</h1>
         <p className="home-subtitle">
-          Submit a video link, extract its transcript dynamically, and ask questions contextually using AI.
+          Submit a video link, extract its transcript dynamically and ask questions contextually using AI.
         </p>
         <div className="home-hero-actions">
           <button
@@ -43,7 +43,7 @@ export function HomePage({ navigate }) {
             className="primary-button hero-btn"
             onClick={() => navigate("/video/index")}
           >
-            📥 Index New Video
+            Index New Video
           </button>
         </div>
       </section>
