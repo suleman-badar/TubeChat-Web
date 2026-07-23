@@ -17,7 +17,6 @@ export function ChatSidebar({
   onNewChat,
 }) {
   return (
-    console.log("YOUTUBE ID IN SIDEBAR", youtubeId),
     <aside className="panel chat-sidebar">
 
       <h2>Video Chat</h2>

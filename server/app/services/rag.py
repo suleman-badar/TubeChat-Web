@@ -1,7 +1,7 @@
 from functools import lru_cache
 import os
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai import ChatOpenAI
 from langchain_core.runnables import RunnableLambda, RunnableParallel
 from dotenv import load_dotenv
@@ -16,13 +16,24 @@ def get_embeddings():
 
 def create_rag_pipeline(retriever):
     """Create a simple LCEL RAG pipeline that formats context+question and calls the LLM."""
-    prompt = PromptTemplate(
-        template=(
-            "You are a helpful assistant that answers questions based on the following retrieved data.\n"
-            "If the context is insufficient to answer the question, say you don't know.\n\n"
-            "Context:\n{context}\n\nQuestion: {question}"
-        ),
-        input_variables=["context", "question"],
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                """You are a helpful assistant that answers questions based on the
+    provided transcript.
+
+    Use the retrieved context to answer.
+
+    If the context is insufficient,go for websearch, if there is no authenticated source say you don't know.
+    """,
+            ),
+            MessagesPlaceholder(variable_name="chat_history", optional=True),
+            (
+                "human",
+                "Context:\n{context}\n\nQuestion: {question}",
+            ),
+        ]
     )
 
     llm = ChatOpenAI(
@@ -40,7 +51,9 @@ def create_rag_pipeline(retriever):
             context=retrieve_documents
             | RunnableLambda(lambda docs: "\n".join(doc.page_content for doc in docs)),
             question=question,
+            chat_history=RunnableLambda(lambda inputs: inputs.get("chat_history")),
         )
+        | RunnableLambda(lambda x: (print(x), x)[1])
         | prompt
         | llm
     )

@@ -67,7 +67,6 @@ export function ChatPage({ navigate }) {
       const data =
         await getChatSession(sessionId);
       setMessages(data.messages);
-      console.log("YOUTUBE ID IN CHAT PAGE", data.session.youtube_id);
       setYoutubeId(data.session.youtube_id);
     }
     catch (error) {

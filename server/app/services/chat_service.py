@@ -18,7 +18,7 @@ from app.schemas.chat_schema import (
 )
 from app.schemas.video_schema import RecentChatSessionResponse
 
-from app.services.vector_store import get_retriever
+from app.services.vector_store import get_retriever, get_chat_history
 from app.services.rag import create_rag_pipeline
 
 
@@ -26,10 +26,6 @@ def send_message(
     request: ChatRequest,
     db: Session,
 ) -> ChatResponse:
-
-    print("youtube_id:", request.youtube_id)
-    print("session_id:", request.session_id)
-
     try:
         # ---------------------------------------------------------
         # Temporary single-user implementation
@@ -80,20 +76,21 @@ def send_message(
         # ---------------------------------------------------------
         # RAG
         # ---------------------------------------------------------
-        user_message = Message(
-            session_id=session.id,
-            role=MessageRole.USER,
-            content=request.question,
-        )
-        db.add(user_message)
-
+        chat_history = get_chat_history(session.id, db)
         retriever = get_retriever(video.youtube_id)
 
         rag_pipeline, _, _ = create_rag_pipeline(retriever)
         answer = rag_pipeline.invoke(
             {
                 "question": request.question,
+                "chat_history": chat_history,
             }
+        )
+
+        user_message = Message(
+            session_id=session.id,
+            role=MessageRole.USER,
+            content=request.question,
         )
 
         assistant_message = Message(
@@ -101,6 +98,8 @@ def send_message(
             role=MessageRole.ASSISTANT,
             content=answer.content,
         )
+
+        db.add(user_message)
         db.add(assistant_message)
         session.updated_at = func.now()  # Update the session's updated_at timestamp
         db.commit()

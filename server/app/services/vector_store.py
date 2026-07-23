@@ -1,6 +1,13 @@
 from langchain_chroma import Chroma
 from langchain_core.vectorstores import VectorStoreRetriever
 from langchain_core.documents import Document
+from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
+
+
+from sqlalchemy.orm import Session
+
+from app.database.models.message_model import Message, MessageRole
+
 
 from app.services.rag import get_embeddings
 
@@ -53,3 +60,27 @@ def get_retriever(youtube_id: str) -> VectorStoreRetriever:
         search_type="similarity",
         search_kwargs={"k": 3, "filter": {"youtube_id": youtube_id}},
     )
+
+
+def get_chat_history(session_id: str, db: Session, limit=10) -> list[BaseMessage]:
+    """Fetch chat history for a given session ID."""
+    messages = (
+        db.query(Message)
+        .filter(Message.session_id == session_id)
+        .order_by(Message.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+    print(f"Fetched {messages} ")
+
+    messages.reverse()
+
+    history = []
+
+    for message in messages:
+        if message.role == MessageRole.USER:
+            history.append(HumanMessage(content=message.content))
+        else:
+            history.append(AIMessage(content=message.content))
+
+    return history
