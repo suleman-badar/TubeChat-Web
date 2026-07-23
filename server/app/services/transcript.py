@@ -3,31 +3,36 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 
 
-def fetch_transcript(video_id):
-    """Fetch transcript from YouTube for a given video ID."""
+def fetch_transcript(youtube_id: str):
+    """Fetch transcript from YouTube for a given YouTube ID."""
     api = YouTubeTranscriptApi()
-    transcript = api.fetch(video_id)
+    transcript = api.fetch(youtube_id)
     return transcript
 
-def split_transcript(transcript, video_id):
+
+# no need to create Document obj for each snippet, coz each snipper is already very small.
+# It will not create any meaningful chunk. Instead, we will create # a single Document object
+# for the entire transcript# and then split it into chunks using the RecursiveCharacterTextSplitter.
+
+
+def split_transcript(transcript, youtube_id: str) -> list[Document]:
     """Split transcript into chunks."""
     splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    docs = [
+    full_text = " ".join(snippet.text for snippet in transcript)
+    doc = [
         Document(
-            page_content=snippet.text,
+            page_content=full_text,
             metadata={
-                "video_id": video_id,
-                "start": snippet.start,
-                "duration": snippet.duration,
+                "youtube_id": youtube_id,
             },
         )
-        for snippet in transcript
     ]
-    chunks = splitter.split_documents(docs)
+    chunks = splitter.split_documents(doc)
     return chunks
 
-def transcipt(video_id):
-    """Fetch and split transcript for a given video ID."""
-    transcript = fetch_transcript(video_id)
-    chunks = split_transcript(transcript, video_id)
+
+def get_transcript_chunks(youtube_id: str) -> list[Document]:
+    """Fetch and split transcript for a given YouTube ID."""
+    raw_transcript = fetch_transcript(youtube_id)
+    chunks = split_transcript(raw_transcript, youtube_id)
     return chunks

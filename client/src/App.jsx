@@ -1,24 +1,35 @@
-import { useRoute } from './hooks/useRoute'
-import { AppHeader } from './components/AppHeader'
-import { IndexPage } from './pages/IndexPage'
-import { ChatPage } from './pages/ChatPage'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { HomePage } from "./pages/HomePage";
+import { IndexPage } from "./pages/IndexPage";
+import { ChatPage } from "./pages/ChatPage";
 
-function App() {
-  const { route, navigate } = useRoute()
+function AppRoutes() {
+  const navigate = useNavigate();
 
   return (
-    <div className="app-shell">
-      <AppHeader route={route} navigate={navigate} />
+    <Routes>
+      <Route path="/" element={<HomePage navigate={navigate} />} />
 
-      <main className="content-grid">
-        {route === 'chat' ? (
-          <ChatPage navigate={navigate} />
-        ) : (
-          <IndexPage navigate={navigate} />
-        )}
-      </main>
-    </div>
-  )
+      <Route
+        path="/video/index"
+        element={<IndexPage navigate={navigate} />}
+      />
+
+      <Route
+        path="/chat"
+        element={<ChatPage navigate={navigate} />}
+      />
+
+      {/* Redirect any unknown route to home */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 }
 
-export default App
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
+  );
+}

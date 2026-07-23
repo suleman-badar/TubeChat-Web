@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { IndexForm } from '../components/IndexForm'
 import { indexVideo } from '../services/api'
+import { ChatSidebar } from '../components/ChatSidebar'
 
 function formatError(error) {
   if (error instanceof Error) {
@@ -22,22 +23,24 @@ export function IndexPage({ navigate }) {
   })
 
   const onSubmit = async ({ videoUrl }) => {
+    reset() // it will reset the form fields to their default values that is empty string in this case. So the input field will be cleared after submission.
     setIsLoading(true)
     setApiError('')
     setResult(null)
 
     try {
       const data = await indexVideo(videoUrl)
+      console.log('Index video response:', data)
 
-      if (data?.video_id) {
-        const nextUrl = `/chat?video_id=${encodeURIComponent(data.video_id)}`
-        setResult({ videoId: data.video_id, message: 'Video indexed successfully.' })
+      if (data?.youtube_id) {
+        const nextUrl = `/chat?youtube_id=${encodeURIComponent(data.youtube_id)}`
+        setResult({ youtubeId: data.youtube_id, message: 'Video indexed successfully.' })
         reset()
         navigate(nextUrl)
         return
       }
 
-      setResult({ videoId: '', message: 'Video indexed, but no video_id was returned.' })
+      setResult({ youtubeId: '', message: 'Video indexed, but no youtube_id was returned.' })
     } catch (caughtError) {
       setApiError(formatError(caughtError))
     } finally {
@@ -47,13 +50,8 @@ export function IndexPage({ navigate }) {
 
   return (
     <section className="page-card hero-card">
-      <div className="hero-copy">
-        <p className="eyebrow">Step 1</p>
-        <h2>Index a YouTube video</h2>
-        <p className="lead">
-          Paste a YouTube URL, create embeddings on the server, and store the chunks in your
-          persistent vector database.
-        </p>
+      <div >
+      <ChatSidebar youtubeId={result?.youtubeId} navigate={navigate} />
       </div>
 
       <IndexForm
