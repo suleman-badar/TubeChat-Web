@@ -1,4 +1,6 @@
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+
+from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
 
 
@@ -18,7 +20,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def index_video(url: str, db: Session) -> Video:
+async def index_video(url: str, db: AsyncSession) -> Video:
     """
     Index a YouTube video.
 
@@ -45,7 +47,7 @@ def index_video(url: str, db: Session) -> Video:
     if not chunks:
         raise ValueError("Transcript not found or empty")
 
-    index_transcript(chunks)
+    await index_transcript(chunks)
 
     video = create_video(
         db,
@@ -57,24 +59,44 @@ def index_video(url: str, db: Session) -> Video:
     return video
 
 
-def get_video_chat_sessions(
+async def get_video_chat_sessions(
     youtube_id: str,
     current_user: User,
-    db: Session,
+    db: AsyncSession,
 ) -> list[RecentChatSessionResponse]:
 
-    video = db.query(Video).filter(Video.youtube_id == youtube_id).first()
+    # Verify that the video exists
+    res = await db.execute(select(Video).where(Video.youtube_id == youtube_id))
+    video = res.scalar_one_or_none()
 
     if video is None:
-        raise HTTPException(status_code=404, detail="Video not found.")
+        raise HTTPException(
+            status_code=404,
+            detail="Video not found.",
+        )
 
-    sessions = (
-        db.query(ChatSession)
-        .filter(
-            ChatSession.video_id == video.id, ChatSession.user_id == current_user.id
+    # Fetch this user's chat sessions for the video
+    res = await db.execute(
+        select(
+            ChatSession.id,
+            ChatSession.title,
+            ChatSession.updated_at,
+        )
+        .where(
+            ChatSession.video_id == video.id,
+            ChatSession.user_id == current_user.id,
         )
         .order_by(ChatSession.updated_at.desc())
-        .all()
     )
 
-    return [RecentChatSessionResponse.model_validate(session) for session in sessions]
+    rows = res.all()
+
+    return [
+        RecentChatSessionResponse(
+            id=row.id,
+            title=row.title,
+            youtube_id=video.youtube_id,
+            updated_at=row.updated_at,
+        )
+        for row in rows
+    ]

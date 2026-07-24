@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Response
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models.user_model import User
 from app.schemas.auth_schema import (
@@ -31,24 +31,24 @@ def _set_auth_cookie(response: Response, token: str):
 
 
 @router.post("/register")
-def register(
+async def register(
     request: UserRegisterRequest,
     response: Response,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    user = register_user(request, db)
+    user = await register_user(request, db)
     token = create_jwt_token(user.id)
     _set_auth_cookie(response, token)
     return {"message": "User registered successfully"}
 
 
 @router.post("/login")
-def login(
+async def login(
     request: UserLoginRequest,
     response: Response,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    user = login_user(request, db)
+    user = await login_user(request, db)
     token = create_jwt_token(user.id)
     _set_auth_cookie(response, token)
     return {"message": "Login successful"}
@@ -67,5 +67,5 @@ def logout(response: Response):
 
 
 @router.get("/me", response_model=UserMeResponse)
-def me(user: User = Depends(get_current_user)):
+async def me(user: User = Depends(get_current_user)):
     return UserMeResponse.model_validate(user)

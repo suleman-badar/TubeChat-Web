@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi import HTTPException
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 import bcrypt
 import os
@@ -41,7 +41,7 @@ def decode_jwt_token(token: str) -> dict:
         raise HTTPException(status_code=401, detail="Invalid token")
 
 
-def register_user(request: UserRegisterRequest, db: Session) -> User:
+async def register_user(request: UserRegisterRequest, db: AsyncSession) -> User:
     email = request.email
     password = request.password
     confirmPassword = request.confirmPassword
@@ -49,7 +49,9 @@ def register_user(request: UserRegisterRequest, db: Session) -> User:
     if password != confirmPassword:
         raise HTTPException(status_code=400, detail="Passwords do not match")
 
-    existing_user = db.scalar(select(User).where(User.email == email))
+    res = await db.execute(select(User).where(User.email == email))
+    existing_user = res.scalar_one_or_none()
+
     if existing_user:
         raise HTTPException(status_code=409, detail="Email already registered")
 
@@ -59,20 +61,22 @@ def register_user(request: UserRegisterRequest, db: Session) -> User:
 
     db.add(user)
     try:
-        db.commit()
+        await db.commit()
     except:
-        db.rollback()
+        await db.rollback()
         raise
-    db.refresh(user)
+
+    await db.refresh(user)
 
     return user
 
 
-def login_user(request: UserLoginRequest, db: Session) -> User:
+async def login_user(request: UserLoginRequest, db: AsyncSession) -> User:
     email = request.email
     password = request.password
 
-    user = db.scalar(select(User).where(User.email == email))
+    res = await db.execute(select(User).where(User.email == email))
+    user = res.scalar_one_or_none()
 
     if not user:
         raise HTTPException(status_code=401, detail="Invalid email or password")
@@ -83,9 +87,10 @@ def login_user(request: UserLoginRequest, db: Session) -> User:
     return user
 
 
-def get_user_by_id(user_id: UUID, db: Session) -> User:
+async def get_user_by_id(user_id: UUID, db: AsyncSession) -> User:
     """Fetch a user by their UUID. Used by the /me endpoint."""
-    user = db.scalar(select(User).where(User.id == user_id))
+    res = await db.execute(select(User).where(User.id == user_id))
+    user = res.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user

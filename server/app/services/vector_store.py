@@ -4,7 +4,8 @@ from langchain_core.documents import Document
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
 
 
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models.message_model import Message, MessageRole
 
@@ -40,14 +41,14 @@ def get_vector_store() -> Chroma:
     return vector_store
 
 
-def index_transcript(chunks: list[Document]) -> None:
+async def index_transcript(chunks: list[Document]) -> None:
     """Index a video transcript in the Chroma vector store."""
 
     if not chunks:
         raise ValueError("No transcript chunks to index.")
 
     vector_store = get_vector_store()
-    vector_store.add_documents(chunks)
+    await vector_store.aadd_documents(chunks)
 
     logger.info(f"Indexed {len(chunks)} transcript chunks in Chroma vector store.")
 
@@ -62,16 +63,18 @@ def get_retriever(youtube_id: str) -> VectorStoreRetriever:
     )
 
 
-def get_chat_history(session_id: str, db: Session, limit=10) -> list[BaseMessage]:
+async def get_chat_history(
+    session_id: str, db: AsyncSession, limit=10
+) -> list[BaseMessage]:
     """Fetch chat history for a given session ID."""
-    messages = (
-        db.query(Message)
-        .filter(Message.session_id == session_id)
+    res = await db.execute(
+        select(Message)
+        .where(Message.session_id == session_id)
         .order_by(Message.created_at.desc())
         .limit(limit)
-        .all()
     )
-    print(f"Fetched {messages} ")
+    messages = res.scalars().all()
+    # print(f"Fetched {messages} ")
 
     messages.reverse()
 

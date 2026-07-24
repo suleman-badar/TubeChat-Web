@@ -1,25 +1,27 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.database.models.video_model import Video
 
 
-def get_video_by_youtube_id(db: Session, youtube_id: str) -> Video | None:
-    return db.query(Video).filter(Video.youtube_id == youtube_id).first()
+async def get_video_by_youtube_id(db: AsyncSession, youtube_id: str) -> Video | None:
+    res = await db.execute(select(Video).where(Video.youtube_id == youtube_id))
+    return res.scalar_one_or_none()
 
 
-def create_video(
-    db: Session,
+async def create_video(
+    db: AsyncSession,
     **kwargs,
 ) -> Video:
 
     video = Video(**kwargs)
     db.add(video)
     try:
-        db.commit()
-    except Exception as e:
-        db.rollback()
+        await db.commit()
+    except Exception:
+        await db.rollback()
         raise
 
-    db.refresh(video)
+    await db.refresh(video)
 
     return video

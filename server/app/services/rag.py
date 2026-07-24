@@ -42,9 +42,11 @@ def create_rag_pipeline(retriever):
     )
 
     question = RunnableLambda(lambda inputs: inputs["question"])
-    retrieve_documents = RunnableLambda(
-        lambda inputs: retriever.invoke(inputs["question"])
-    )
+
+    async def retrieve_documents_async(inputs):
+        return await retriever.ainvoke(inputs["question"])
+
+    retrieve_documents = RunnableLambda(retrieve_documents_async)
 
     rag_pipeline = (
         RunnableParallel(
