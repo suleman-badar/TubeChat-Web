@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies.db_dependency import get_db
 from app.database.models.user_model import User
@@ -23,31 +23,31 @@ router = APIRouter(prefix="/chat", tags=["Chat"])
 
 
 @router.post("/messages", response_model=ChatResponse)
-def send_message_route(
+async def send_message_route(
     request: ChatRequest,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     user: User | None = Depends(get_optional_user),
 ):
-    return send_message(request, db, user=user)
+    return await send_message(request, db, user=user)
 
 
 @router.get(
     "/chat-sessions/recent",
     response_model=list[RecentChatSessionResponse],
 )
-def recent_sessions(
-    db: Session = Depends(get_db),
+async def recent_sessions(
+    db: AsyncSession = Depends(get_db),
     user: User | None = Depends(get_optional_user),
 ):
-    return get_recent_chat_sessions(db, user=user)
+    return await get_recent_chat_sessions(db, user=user)
 
 
 @router.get(
     "/chat-sessions/{session_id}",
     response_model=ChatSessionResponse,
 )
-def get_session(
+async def get_session(
     session_id: UUID,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    return get_chat_session(session_id, db)
+    return await get_chat_session(session_id, db)
