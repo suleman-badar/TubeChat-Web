@@ -14,19 +14,20 @@ def get_embeddings():
     return HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 
-def create_rag_pipeline(retriever):
-    """Create a simple LCEL RAG pipeline that formats context+question and calls the LLM."""
-    prompt = ChatPromptTemplate.from_messages(
+@lru_cache(maxsize=1)
+def get_prompt():
+    """Return a cached ChatPromptTemplate for RAG."""
+    return ChatPromptTemplate.from_messages(
         [
             (
                 "system",
                 """You are a helpful assistant that answers questions based on the
-    provided transcript.
-
-    Use the retrieved context to answer.
-
-    If the context is insufficient,go for websearch, if there is no authenticated source say you don't know.
-    """,
+        provided transcript.
+    
+        Use the retrieved context to answer.
+    
+        If the context is insufficient,go for websearch, if there is no authenticated source say you don't know.
+        """,
             ),
             MessagesPlaceholder(variable_name="chat_history", optional=True),
             (
@@ -36,10 +37,21 @@ def create_rag_pipeline(retriever):
         ]
     )
 
-    llm = ChatOpenAI(
+
+@lru_cache(maxsize=1)
+def get_llm() -> ChatOpenAI:
+    """Return a cached ChatOpenAI instance for RAG."""
+    return ChatOpenAI(
         model=os.getenv("OPENAI_MODEL", "openai.gpt-oss-20b"),
         temperature=0,
     )
+
+
+def create_rag_pipeline(retriever):
+    """Create a simple LCEL RAG pipeline that formats context+question and calls the LLM."""
+
+    prompt = get_prompt()
+    llm = get_llm()
 
     question = RunnableLambda(lambda inputs: inputs["question"])
 
@@ -55,9 +67,8 @@ def create_rag_pipeline(retriever):
             question=question,
             chat_history=RunnableLambda(lambda inputs: inputs.get("chat_history")),
         )
-        | RunnableLambda(lambda x: (print(x), x)[1])
         | prompt
         | llm
     )
 
-    return rag_pipeline, prompt, llm
+    return rag_pipeline

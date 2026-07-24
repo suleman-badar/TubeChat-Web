@@ -75,7 +75,7 @@ async def send_message(
         chat_history = await get_chat_history(session.id, db)
         retriever = get_retriever(video.youtube_id)
 
-        rag_pipeline, _, _ = create_rag_pipeline(retriever)
+        rag_pipeline = create_rag_pipeline(retriever)
         answer = await rag_pipeline.ainvoke(
             {
                 "question": request.question,
