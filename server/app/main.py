@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 
 from app.routers.video_route import router as video_router
 from app.routers.chat_route import router as chat_router
+from app.routers.auth_route import router as auth_router
 from app.services.vector_store import initialize_vector_store
 
 # Lifespan event to initialize the vector store on startup for just one time
@@ -42,6 +43,7 @@ def main():
     return {"message": "App running"}
 
 
+app.include_router(auth_router)
 app.include_router(video_router)
 app.include_router(chat_router)
 

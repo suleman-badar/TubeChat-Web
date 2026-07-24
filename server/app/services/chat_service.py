@@ -25,18 +25,9 @@ from app.services.rag import create_rag_pipeline
 def send_message(
     request: ChatRequest,
     db: Session,
+    user: User | None = None,
 ) -> ChatResponse:
     try:
-        # ---------------------------------------------------------
-        # Temporary single-user implementation
-        # Replace this with current_user after JWT
-        # ---------------------------------------------------------
-
-        user = db.query(User).first()
-
-        if user is None:
-            raise HTTPException(status_code=500, detail="No user found.")
-
         # ---------------------------------------------------------
         # Existing chat
         # ---------------------------------------------------------
@@ -64,7 +55,7 @@ def send_message(
             if video is None:
                 raise HTTPException(status_code=404, detail="Video not found.")
             session = ChatSession(
-                user_id=user.id,
+                user_id=user.id if user else None,
                 video_id=video.id,
             )
 
@@ -137,8 +128,15 @@ def get_chat_session(
 
 def get_recent_chat_sessions(
     db: Session,
+    user: User | None = None,
 ) -> list[RecentChatSessionResponse]:
+    if user is None:
+        return []
     sessions = (
-        db.query(ChatSession).order_by(ChatSession.updated_at.desc()).limit(10).all()
+        db.query(ChatSession)
+        .filter(ChatSession.user_id == user.id)
+        .order_by(ChatSession.updated_at.desc())
+        .limit(10)
+        .all()
     )
     return [RecentChatSessionResponse.model_validate(session) for session in sessions]

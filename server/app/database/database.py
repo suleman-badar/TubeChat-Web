@@ -1,6 +1,5 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from collections.abc import Generator
 
 from dotenv import load_dotenv
 import os
@@ -11,7 +10,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 engine = create_engine(
     DATABASE_URL,
-    echo=True,           # Logs SQL queries (great while learning)
+    # echo=True,  # Logs SQL queries
 )
 
 SessionLocal = sessionmaker(
@@ -19,13 +18,3 @@ SessionLocal = sessionmaker(
     autocommit=False,
     bind=engine,
 )
-
-
-
-def get_db() -> Generator:
-    db = SessionLocal()
-
-    try:
-        yield db
-    finally:
-        db.close()

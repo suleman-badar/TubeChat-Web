@@ -3,7 +3,9 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.database.database import get_db
+from app.dependencies.db_dependency import get_db
+from app.database.models.user_model import User
+from app.dependencies.auth_dependency import get_optional_user
 from app.schemas.chat_schema import ChatSessionResponse, ChatResponse, ChatRequest
 from app.schemas.video_schema import RecentChatSessionResponse
 from app.services.chat_service import (
@@ -24,8 +26,9 @@ router = APIRouter(prefix="/chat", tags=["Chat"])
 def send_message_route(
     request: ChatRequest,
     db: Session = Depends(get_db),
+    user: User | None = Depends(get_optional_user),
 ):
-    return send_message(request, db)
+    return send_message(request, db, user=user)
 
 
 @router.get(
@@ -34,8 +37,9 @@ def send_message_route(
 )
 def recent_sessions(
     db: Session = Depends(get_db),
+    user: User | None = Depends(get_optional_user),
 ):
-    return get_recent_chat_sessions(db)
+    return get_recent_chat_sessions(db, user=user)
 
 
 @router.get(

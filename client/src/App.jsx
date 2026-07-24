@@ -2,6 +2,10 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-route
 import { HomePage } from "./pages/HomePage";
 import { IndexPage } from "./pages/IndexPage";
 import { ChatPage } from "./pages/ChatPage";
+import { LoginPage } from "./pages/LoginPage";
+import { RegisterPage } from "./pages/RegisterPage";
+import { AppShell } from "./components/AppShell";
+import { AuthProvider } from "./contexts/AppContext";
 
 function AppRoutes() {
   const navigate = useNavigate();
@@ -20,6 +24,9 @@ function AppRoutes() {
         element={<ChatPage navigate={navigate} />}
       />
 
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+
       {/* Redirect any unknown route to home */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
@@ -29,7 +36,11 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AppRoutes />
+      <AuthProvider>
+        <AppShell>
+          <AppRoutes />
+        </AppShell>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

@@ -1,3 +1,7 @@
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AppContext"
+import { Link } from "react-router-dom";
+
 function formatDate(dateString) {
   if (!dateString) return "";
 
@@ -16,10 +20,26 @@ export function ChatSidebar({
   onSessionClick,
   onNewChat,
 }) {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
   return (
     <aside className="panel chat-sidebar">
 
-      <h2>Video Chat</h2>
+      <div className="sidebar-brand" onClick={() => navigate("/")}>
+        <h2 className="brand-text">TubeChat</h2>
+      </div>
+
+      <button
+        type="button"
+        className="nav-btn primary index-video-btn"
+        onClick={() => navigate("/video/index")}
+      >
+        + Index Video
+      </button>
+
+      <hr />
+
 
       <div className="info-block">
         <span className="info-label">Current Video</span>
@@ -80,7 +100,19 @@ export function ChatSidebar({
           })}
         </div>
       )}
-
+      <div className="sidebar-auth">
+        {/* {console.log("User in sidebar:", user)} */}
+        {user ? (
+          <>
+            <span className="sidebar-user-email">{user.email}</span>
+            <button type="button" className="text-link" onClick={logout}>
+              Log out
+            </button>
+          </>
+        ) : (
+          <Link to="/login" className="text-link">Log in / Sign up</Link>
+        )}
+      </div>
     </aside>
   );
 }

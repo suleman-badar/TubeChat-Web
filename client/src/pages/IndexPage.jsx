@@ -2,13 +2,14 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { IndexForm } from '../components/IndexForm'
 import { indexVideo } from '../services/api'
-import { ChatSidebar } from '../components/ChatSidebar'
 
 function formatError(error) {
+  if (error.response?.data?.detail) {
+    return error.response.data.detail;
+  }
   if (error instanceof Error) {
     return error.message
   }
-
   return 'Something went wrong. Please try again.'
 }
 
@@ -16,6 +17,7 @@ export function IndexPage({ navigate }) {
   const [isLoading, setIsLoading] = useState(false)
   const [apiError, setApiError] = useState('')
   const [result, setResult] = useState(null)
+  
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     defaultValues: {
       videoUrl: '',
@@ -23,7 +25,6 @@ export function IndexPage({ navigate }) {
   })
 
   const onSubmit = async ({ videoUrl }) => {
-    reset() // it will reset the form fields to their default values that is empty string in this case. So the input field will be cleared after submission.
     setIsLoading(true)
     setApiError('')
     setResult(null)
@@ -33,10 +34,12 @@ export function IndexPage({ navigate }) {
       console.log('Index video response:', data)
 
       if (data?.youtube_id) {
-        const nextUrl = `/chat?youtube_id=${encodeURIComponent(data.youtube_id)}`
-        setResult({ youtubeId: data.youtube_id, message: 'Video indexed successfully.' })
+        setResult({ youtubeId: data.youtube_id, message: 'Video indexed successfully. Redirecting...' })
         reset()
-        navigate(nextUrl)
+        // Wait a short moment so they see the success state
+        setTimeout(() => {
+          navigate(`/chat?youtube_id=${encodeURIComponent(data.youtube_id)}`)
+        }, 1200)
         return
       }
 
@@ -49,19 +52,24 @@ export function IndexPage({ navigate }) {
   }
 
   return (
-    <section className="page-card hero-card">
-      <div >
-      <ChatSidebar youtubeId={result?.youtubeId} navigate={navigate} />
-      </div>
+    <div className="index-container">
+      <div className="index-card-wrapper">
+        <div className="index-copy">
+          <h2>Index YouTube Video</h2>
+          <p className="index-subtitle">
+            Provide a YouTube link. We'll fetch the transcript, chunk it, embed it, and make it ready for instant AI-powered chatting.
+          </p>
+        </div>
 
-      <IndexForm
-        register={register}
-        errors={errors}
-        onSubmit={handleSubmit(onSubmit)}
-        isLoading={isLoading}
-        apiError={apiError}
-        result={result}
-      />
-    </section>
+        <IndexForm
+          register={register}
+          errors={errors}
+          onSubmit={handleSubmit(onSubmit)}
+          isLoading={isLoading}
+          apiError={apiError}
+          result={result}
+        />
+      </div>
+    </div>
   )
 }

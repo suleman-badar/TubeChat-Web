@@ -4,9 +4,11 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.database.database import get_db
+from app.database.models.user_model import User
+from app.dependencies.db_dependency import get_db
 from app.services.video_service import index_video, get_video_chat_sessions
 from app.schemas.video_schema import RecentChatSessionResponse
+from app.dependencies.auth_dependency import get_current_user
 
 router = APIRouter(prefix="/video", tags=["Videos"])
 
@@ -47,6 +49,7 @@ def index(
 )
 def get_video_sessions(
     youtube_id: str,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return get_video_chat_sessions(youtube_id, db)
+    return get_video_chat_sessions(youtube_id, current_user, db)
