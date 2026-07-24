@@ -8,6 +8,8 @@ from app.services.vector_store import index_transcript
 from app.services.youtube import extract_youtube_id
 from app.database.models.video_model import Video
 from app.database.models.chat_session_model import ChatSession
+from app.database.models.user_model import User
+
 from app.schemas.video_schema import RecentChatSessionResponse
 
 
@@ -57,6 +59,7 @@ def index_video(url: str, db: Session) -> Video:
 
 def get_video_chat_sessions(
     youtube_id: str,
+    current_user: User,
     db: Session,
 ) -> list[RecentChatSessionResponse]:
 
@@ -67,7 +70,9 @@ def get_video_chat_sessions(
 
     sessions = (
         db.query(ChatSession)
-        .filter(ChatSession.video_id == video.id)
+        .filter(
+            ChatSession.video_id == video.id, ChatSession.user_id == current_user.id
+        )
         .order_by(ChatSession.updated_at.desc())
         .all()
     )

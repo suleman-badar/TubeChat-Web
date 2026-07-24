@@ -17,10 +17,10 @@ class ChatSession(Base):
     __tablename__ = "chat_sessions"
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid,
-        ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
     )
 
     video_id: Mapped[uuid.UUID] = mapped_column(
@@ -43,7 +43,7 @@ class ChatSession(Base):
         back_populates="session", cascade="all, delete-orphan"
     )
 
-    user: Mapped["User"] = relationship(back_populates="chat_sessions")
+    user: Mapped["User | None"] = relationship(back_populates="chat_sessions")
     video: Mapped["Video"] = relationship(back_populates="chat_sessions")
 
     @property

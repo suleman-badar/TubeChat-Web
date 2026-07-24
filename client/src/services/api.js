@@ -5,6 +5,7 @@ const API_BASE_URL =
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  withCredentials: true,
 });
 
 
@@ -78,5 +79,26 @@ export async function getRecentChatSessions() {
     "/chat/chat-sessions/recent"
   );
 
+  return data;
+}
+
+export async function loginUser(email, password) {
+  const {data} = await api.post('/auth/login', { email, password })
+  return data
+}
+
+export async function registerUser(email, password, confirmPassword) {
+  const { data } = await api.post('/auth/register', { email, password, confirmPassword });
+  return data;
+}
+
+export async function logoutUser() {
+  const { data } = await api.post('/auth/logout');
+  return data;
+}
+
+export async function getCurrentUser() {
+  const { data } = await api.get('/auth/me');
+  // console.log("Current user data: API", data);
   return data;
 }

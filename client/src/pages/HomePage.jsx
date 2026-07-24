@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { getRecentChatSessions } from "../services/api";
+import { useAuth } from "../contexts/AppContext";
 
 function formatDate(dateString) {
   if (!dateString) return "";
@@ -11,6 +13,7 @@ function formatDate(dateString) {
 }
 
 export function HomePage({ navigate }) {
+  const { user } = useAuth();
   const [recentSessions, setRecentSessions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -28,7 +31,7 @@ export function HomePage({ navigate }) {
       }
     }
     fetchSessions();
-  }, []);
+  }, [user]);
 
   return (
     <div className="home-container">
@@ -48,6 +51,14 @@ export function HomePage({ navigate }) {
         </div>
       </section>
 
+      {!user && (
+        <div className="guest-banner info-block" style={{ textAlign: "center", margin: "1rem 0 0" }}>
+          <p>
+            💡 Using as Guest. <Link to="/login" style={{ color: "var(--accent)" }}>Log in</Link> to save and access your conversation history across devices!
+          </p>
+        </div>
+      )}
+
       <section className="home-history-section">
         <h3>Recent Conversations</h3>
         {isLoading ? (
@@ -56,7 +67,11 @@ export function HomePage({ navigate }) {
           <p className="status-text error-text">{error}</p>
         ) : recentSessions.length === 0 ? (
           <div className="empty-history-card">
-            <p>No recent sessions found. Index a video to start chatting!</p>
+            <p>
+              {user
+                ? "No recent sessions found. Index a video to start chatting!"
+                : "Log in to view saved chat sessions, or index a video to start chatting as guest."}
+            </p>
           </div>
         ) : (
           <div className="history-grid">

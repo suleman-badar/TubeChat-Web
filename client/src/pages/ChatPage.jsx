@@ -5,6 +5,7 @@ import { useSearchParams } from "react-router-dom";
 import { ChatComposer } from "../components/ChatComposer";
 import { ChatMessageList } from "../components/ChatMessageList";
 import { ChatSidebar } from "../components/ChatSidebar";
+import { useAuth } from "../contexts/AppContext";
 
 import {
   chat,
@@ -71,6 +72,9 @@ export function ChatPage({ navigate }) {
     loadConversation(sessionId);
   }, [sessionId]);
 
+
+  const { user } = useAuth(); // Access user from AuthContext
+
   // Load sidebar conversations when active video changes
   useEffect(() => {
     if (!youtubeId) return;
@@ -84,7 +88,7 @@ export function ChatPage({ navigate }) {
       }
     }
     loadSessions();
-  }, [youtubeId, messages.length]); // Refresh sidebar when message count changes
+  }, [youtubeId,user ]); // Refresh sidebar when user logged in/out or when video changes
 
   async function onSubmit({ question }) {
     if (!youtubeId) return;

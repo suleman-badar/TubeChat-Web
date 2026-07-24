@@ -1,4 +1,6 @@
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AppContext"
+import { Link } from "react-router-dom";
 
 function formatDate(dateString) {
   if (!dateString) return "";
@@ -18,6 +20,7 @@ export function ChatSidebar({
   onSessionClick,
   onNewChat,
 }) {
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   return (
@@ -97,7 +100,19 @@ export function ChatSidebar({
           })}
         </div>
       )}
-
+      <div className="sidebar-auth">
+        {/* {console.log("User in sidebar:", user)} */}
+        {user ? (
+          <>
+            <span className="sidebar-user-email">{user.email}</span>
+            <button type="button" className="text-link" onClick={logout}>
+              Log out
+            </button>
+          </>
+        ) : (
+          <Link to="/login" className="text-link">Log in / Sign up</Link>
+        )}
+      </div>
     </aside>
   );
 }

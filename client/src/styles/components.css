@@ -248,3 +248,72 @@ h3 {
   padding: 4px 0 12px 0;
   user-select: none;
 }
+
+/* Auth page */
+
+
+.auth-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 24px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 360px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 32px;
+}
+
+.auth-form h1 {
+  margin: 0 0 8px 0;
+  font-size: 1.5rem;
+}
+
+.auth-switch {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.auth-switch a {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.sidebar-auth {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sidebar-user-email {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  word-break: break-all;
+}
+
+.text-link {
+  color: var(--accent);
+  font-size: 0.85rem;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: left;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
