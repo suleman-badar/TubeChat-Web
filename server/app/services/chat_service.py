@@ -1,4 +1,6 @@
 from uuid import UUID
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
 from sqlalchemy import func, select
 
 from fastapi import HTTPException
@@ -9,7 +11,6 @@ from app.database.models.chat_session_model import ChatSession
 from app.database.models.user_model import User
 from app.database.models.video_model import Video
 from app.database.models.message_model import Message, MessageRole
-
 from app.schemas.chat_schema import (
     ChatRequest,
     ChatResponse,
@@ -18,7 +19,6 @@ from app.schemas.chat_schema import (
     MessageResponse,
 )
 from app.schemas.video_schema import RecentChatSessionResponse
-
 from app.services.vector_store import get_retriever, get_chat_history
 from app.services.rag import create_rag_pipeline
 
@@ -26,6 +26,8 @@ from app.services.rag import create_rag_pipeline
 async def send_message(
     request: ChatRequest,
     db: AsyncSession,
+    llm: ChatOpenAI,
+    prompt: ChatPromptTemplate,
     user: User | None = None,
 ) -> ChatResponse:
     try:
@@ -75,7 +77,7 @@ async def send_message(
         chat_history = await get_chat_history(session.id, db)
         retriever = get_retriever(video.youtube_id)
 
-        rag_pipeline = create_rag_pipeline(retriever)
+        rag_pipeline = create_rag_pipeline(retriever, llm, prompt)
         answer = await rag_pipeline.ainvoke(
             {
                 "question": request.question,

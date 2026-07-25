@@ -6,6 +6,7 @@ from app.routers.video_route import router as video_router
 from app.routers.chat_route import router as chat_router
 from app.routers.auth_route import router as auth_router
 from app.services.vector_store import initialize_vector_store
+from app.services.rag import build_embeddings, build_prompt, build_llm
 
 # Lifespan event to initialize the vector store on startup for just one time
 # rather than creating N instances of the vector store for each request from the user. For details see ARC.md file
@@ -13,12 +14,15 @@ from app.services.vector_store import initialize_vector_store
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # print("initialize_vector_store() called")
-    # print("module:", __name__)
-    # print("id:", id(vector_store))
-    initialize_vector_store()
-    # print("initialized")
-    # print(id(vector_store))
+    # using sequential intilization here bcz it is a one time task and
+    # the obj is an  internal implementation of the app and not exposed to the user
+    embeddings = build_embeddings()
+    initialize_vector_store(embeddings)
+
+    # The obj needs to reach a route handler so we are storing it in the app.state.
+    app.state.prompt = build_prompt()
+    app.state.llm = build_llm()
+
     yield
     # for any cleanup tasks when the app shuts down, if needed
 

@@ -27,7 +27,7 @@ export function ChatPage({ navigate }) {
 
   const queryYoutubeId = searchParams.get("youtube_id");
   const sessionId = searchParams.get("session_id");
-  
+
   const [youtubeId, setYoutubeId] = useState(queryYoutubeId);
   const [messages, setMessages] = useState([]);
   const [sessions, setSessions] = useState([]);
@@ -88,7 +88,7 @@ export function ChatPage({ navigate }) {
       }
     }
     loadSessions();
-  }, [youtubeId,user ]); // Refresh sidebar when user logged in/out or when video changes
+  }, [youtubeId, user]); // Refresh sidebar when user logged in/out or when video changes
 
   async function onSubmit({ question }) {
     if (!youtubeId) return;
@@ -154,16 +154,16 @@ export function ChatPage({ navigate }) {
           <h2>No Video Selected</h2>
           <p>Please index a new video or choose a recent conversation from the home page to start chatting.</p>
           <div className="fallback-actions">
-            <button 
-              type="button" 
-              className="primary-button" 
+            <button
+              type="button"
+              className="primary-button"
               onClick={() => navigate("/video/index")}
             >
               Index Video
             </button>
-            <button 
-              type="button" 
-              className="secondary-button" 
+            <button
+              type="button"
+              className="secondary-button"
               onClick={() => navigate("/")}
             >
               Go to Home

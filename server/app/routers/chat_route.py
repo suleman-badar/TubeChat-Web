@@ -2,10 +2,13 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
 
 from app.dependencies.db_dependency import get_db
-from app.database.models.user_model import User
 from app.dependencies.auth_dependency import get_optional_user
+from app.dependencies.rag_dependency import get_llm, get_prompt
+from app.database.models.user_model import User
 from app.schemas.chat_schema import ChatSessionResponse, ChatResponse, ChatRequest
 from app.schemas.video_schema import RecentChatSessionResponse
 from app.services.chat_service import (
@@ -27,8 +30,10 @@ async def send_message_route(
     request: ChatRequest,
     db: AsyncSession = Depends(get_db),
     user: User | None = Depends(get_optional_user),
+    llm: ChatOpenAI = Depends(get_llm),
+    prompt: ChatPromptTemplate = Depends(get_prompt),
 ):
-    return await send_message(request, db, user=user)
+    return await send_message(request, db, llm=llm, prompt=prompt, user=user)
 
 
 @router.get(

@@ -3,15 +3,10 @@ from langchain_core.vectorstores import VectorStoreRetriever
 from langchain_core.documents import Document
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
 
+from app.database.models.message_model import Message, MessageRole
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.database.models.message_model import Message, MessageRole
-
-
-from app.services.rag import get_embeddings
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -21,7 +16,7 @@ _COLLECTION_NAME = "youtube_transcripts"
 _PERSIST_DIRECTORY = "./chroma_db"
 
 
-def initialize_vector_store() -> None:
+def initialize_vector_store(embeddings) -> None:
     global vector_store
 
     if vector_store is not None:
@@ -29,7 +24,7 @@ def initialize_vector_store() -> None:
 
     vector_store = Chroma(
         collection_name=_COLLECTION_NAME,
-        embedding_function=get_embeddings(),
+        embedding_function=embeddings,
         persist_directory=_PERSIST_DIRECTORY,
     )
 
