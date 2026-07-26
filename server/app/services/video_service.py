@@ -38,7 +38,7 @@ async def index_video(url: str, db: AsyncSession) -> Video:
     logging.info(f"Indexing video with YouTube ID: {youtube_id}")
 
     # Check if the video is already indexed
-    existing_video = get_video_by_youtube_id(db, youtube_id)
+    existing_video = await get_video_by_youtube_id(db, youtube_id)
     if existing_video:
         logger.info(f"Video {youtube_id} already indexed.")
         return existing_video
@@ -49,7 +49,7 @@ async def index_video(url: str, db: AsyncSession) -> Video:
 
     await index_transcript(chunks)
 
-    video = create_video(
+    video = await create_video(
         db,
         youtube_id=youtube_id,
     )

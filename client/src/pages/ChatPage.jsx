@@ -8,7 +8,7 @@ import { ChatSidebar } from "../components/ChatSidebar";
 import { useAuth } from "../contexts/AppContext";
 
 import {
-  chat,
+  chatStream,
   getChatSession,
   getVideoChatSessions,
 } from "../services/api";
@@ -27,7 +27,7 @@ export function ChatPage({ navigate }) {
 
   const queryYoutubeId = searchParams.get("youtube_id");
   const sessionId = searchParams.get("session_id");
-  
+
   const [youtubeId, setYoutubeId] = useState(queryYoutubeId);
   const [messages, setMessages] = useState([]);
   const [sessions, setSessions] = useState([]);
@@ -88,7 +88,9 @@ export function ChatPage({ navigate }) {
       }
     }
     loadSessions();
-  }, [youtubeId,user ]); // Refresh sidebar when user logged in/out or when video changes
+  }, [youtubeId, user]); // Refresh sidebar when user logged in/out or when video changes
+
+
 
   async function onSubmit({ question }) {
     if (!youtubeId) return;
@@ -97,43 +99,54 @@ export function ChatPage({ navigate }) {
     setIsLoading(true);
     reset(); // Clear input immediately for better immediate UX response
 
-    const userMessage = {
-      role: "user",
-      content: question,
-    };
+    const userMessage = { role: "user", content: question };
+    const assistantMessage = { role: "assistant", content: "" };
 
-    setMessages((current) => [...current, userMessage]);
+    let streamedSessionId = sessionId; // Use the current sessionId if available
 
-    try {
-      const data = await chat({
-        youtubeId: youtubeId,
-        sessionId: sessionId,
-        question,
-      });
+    // Add both optimistically — user message now, assistant message as an
+    // empty bubble that fills in as tokens arrive.
+    setMessages((current) => [...current, userMessage, assistantMessage]);
 
-      // New conversation redirection
-      if (!sessionId) {
-        navigate(`/chat?session_id=${data.session_id}`, {
-          replace: true,
+    let hasNavigated = false;
+
+    await chatStream({
+      youtubeId,
+      sessionId,
+      question,
+
+      onSession: (newSessionId) => {
+        streamedSessionId = newSessionId;
+      },
+
+      onToken: (answer) => {
+        setMessages((current) => {
+          const updated = [...current];
+          const lastIndex = updated.length - 1;
+          updated[lastIndex] = {
+            ...updated[lastIndex],
+            content: updated[lastIndex].content + answer,
+          };
+          return updated;
         });
-        return;
-      }
+      },
 
-      // Existing conversation update
-      setMessages((current) => [
-        ...current,
-        {
-          role: "assistant",
-          content: data.answer,
-        },
-      ]);
-    } catch (error) {
-      setApiError(formatError(error));
-      // Remove the optimistically added user message on failure so state reflects database truth
-      setMessages((current) => current.slice(0, -1));
-    } finally {
-      setIsLoading(false);
-    }
+      onDone: () => {
+        setIsLoading(false);
+        if(!sessionId && streamedSessionId && !hasNavigated) {
+          hasNavigated = true;
+          navigate(`/chat?session_id=${streamedSessionId}`);
+        }
+      },
+
+      onError: (message) => {
+        setApiError(message);
+        setIsLoading(false);
+        // Remove both optimistic messages (user + empty/partial assistant)
+        // on failure, so state reflects database truth.
+        setMessages((current) => current.slice(0, -2));
+      },
+    });
   }
 
   function handleSessionClick(id) {
@@ -154,16 +167,16 @@ export function ChatPage({ navigate }) {
           <h2>No Video Selected</h2>
           <p>Please index a new video or choose a recent conversation from the home page to start chatting.</p>
           <div className="fallback-actions">
-            <button 
-              type="button" 
-              className="primary-button" 
+            <button
+              type="button"
+              className="primary-button"
               onClick={() => navigate("/video/index")}
             >
               Index Video
             </button>
-            <button 
-              type="button" 
-              className="secondary-button" 
+            <button
+              type="button"
+              className="secondary-button"
               onClick={() => navigate("/")}
             >
               Go to Home

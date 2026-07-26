@@ -1,4 +1,3 @@
-from functools import lru_cache
 import os
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -9,13 +8,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-@lru_cache(maxsize=1)
-def get_embeddings():
+def build_embeddings():
     return HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 
-@lru_cache(maxsize=1)
-def get_prompt():
+def build_prompt():
     """Return a cached ChatPromptTemplate for RAG."""
     return ChatPromptTemplate.from_messages(
         [
@@ -38,8 +35,7 @@ def get_prompt():
     )
 
 
-@lru_cache(maxsize=1)
-def get_llm() -> ChatOpenAI:
+def build_llm() -> ChatOpenAI:
     """Return a cached ChatOpenAI instance for RAG."""
     return ChatOpenAI(
         model=os.getenv("OPENAI_MODEL", "openai.gpt-oss-20b"),
@@ -47,11 +43,8 @@ def get_llm() -> ChatOpenAI:
     )
 
 
-def create_rag_pipeline(retriever):
+def create_rag_pipeline(retriever, llm: ChatOpenAI, prompt: ChatPromptTemplate):
     """Create a simple LCEL RAG pipeline that formats context+question and calls the LLM."""
-
-    prompt = get_prompt()
-    llm = get_llm()
 
     question = RunnableLambda(lambda inputs: inputs["question"])
 
