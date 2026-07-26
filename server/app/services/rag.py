@@ -38,7 +38,7 @@ def build_prompt():
 def build_llm() -> ChatOpenAI:
     """Return a cached ChatOpenAI instance for RAG."""
     return ChatOpenAI(
-        model=os.getenv("OPENAI_MODEL", "openai.`gpt-oss-20b"),
+        model=os.getenv("OPENAI_MODEL", "openai.gpt-oss-20b"),
         temperature=0,
     )
 

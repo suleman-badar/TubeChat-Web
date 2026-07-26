@@ -1,7 +1,10 @@
 from uuid import UUID
+import json
+from sqlalchemy import func, select
+from typing import AsyncGenerator
+
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
-from sqlalchemy import func, select
 
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,102 +26,114 @@ from app.services.vector_store import get_retriever, get_chat_history
 from app.services.rag import create_rag_pipeline
 
 
-async def send_message(
+async def stream_message(
     request: ChatRequest,
     db: AsyncSession,
     llm: ChatOpenAI,
     prompt: ChatPromptTemplate,
     user: User | None = None,
-) -> ChatResponse:
+) -> AsyncGenerator[str, None]:
+
+    # ---------------------------------------------------------
+    # Existing chat
+    # ---------------------------------------------------------
+
+    if request.session_id:
+        res = await db.execute(
+            select(ChatSession)
+            .options(selectinload(ChatSession.video))
+            .where(ChatSession.id == request.session_id)
+        )
+        session = res.scalar_one_or_none()
+
+        if session is None:
+            raise HTTPException(
+                status_code=404, detail="Stream Chat session not found."
+            )
+        video = session.video
+    # ---------------------------------------------------------
+    # New chat
+    # ---------------------------------------------------------
+    else:
+        if request.youtube_id is None:
+            raise HTTPException(
+                status_code=400, detail="youtube_id is required for a new chat."
+            )
+        res = await db.execute(
+            select(Video).where(Video.youtube_id == request.youtube_id)
+        )
+        video = res.scalar_one_or_none()
+
+        if video is None:
+            raise HTTPException(status_code=404, detail="Video not found.")
+        session = ChatSession(
+            user_id=user.id if user else None,
+            video_id=video.id,
+        )
+
+        db.add(session)
+        await db.flush()  # Ensure session.id is available before adding messages
+
+    # Send the session_id first so the client knows which session this belongs to
+    # (important for new chats, where the client didn't have a session_id yet)
+    yield json.dumps({"type": "session", "session_id": str(session.id)}) + "\n"
+
+    # db.commit()
+    # db.refresh(session)
+    # ---------------------------------------------------------
+    # RAG
+    # ---------------------------------------------------------
+    chat_history = await get_chat_history(session.id, db)
+    retriever = get_retriever(video.youtube_id)
+    rag_pipeline = create_rag_pipeline(retriever, llm, prompt)
+
+    full_answer = ""
+
     try:
-        # ---------------------------------------------------------
-        # Existing chat
-        # ---------------------------------------------------------
-
-        if request.session_id:
-            res = await db.execute(
-                select(ChatSession)
-                .options(selectinload(ChatSession.video))
-                .where(ChatSession.id == request.session_id)
-            )
-            session = res.scalar_one_or_none()
-
-            if session is None:
-                raise HTTPException(status_code=404, detail="Chat session not found.")
-            video = session.video
-        # ---------------------------------------------------------
-        # New chat
-        # ---------------------------------------------------------
-        else:
-            if request.youtube_id is None:
-                raise HTTPException(
-                    status_code=400, detail="youtube_id is required for a new chat."
-                )
-            res = await db.execute(
-                select(Video).where(Video.youtube_id == request.youtube_id)
-            )
-            video = res.scalar_one_or_none()
-
-            if video is None:
-                raise HTTPException(status_code=404, detail="Video not found.")
-            session = ChatSession(
-                user_id=user.id if user else None,
-                video_id=video.id,
-            )
-
-            db.add(session)
-            await db.flush()  # Ensure session.id is available before adding messages
-
-            # db.commit()
-            # db.refresh(session)
-        # ---------------------------------------------------------
-        # RAG
-        # ---------------------------------------------------------
-        chat_history = await get_chat_history(session.id, db)
-        retriever = get_retriever(video.youtube_id)
-
-        rag_pipeline = create_rag_pipeline(retriever, llm, prompt)
-        answer = await rag_pipeline.ainvoke(
-            {
-                "question": request.question,
-                "chat_history": chat_history,
-            }
-        )
-        user_message = Message(
-            session_id=session.id,
-            role=MessageRole.USER,
-            content=request.question,
-        )
-
-        assistant_message = Message(
-            session_id=session.id,
-            role=MessageRole.ASSISTANT,
-            content=answer.content,
-        )
-
-        db.add(user_message)
-        db.add(assistant_message)
-        session.updated_at = func.now()  # Update the session's updated_at timestamp
-        await db.commit()
-
-        return ChatResponse(
-            session_id=session.id,
-            answer=answer.content,
-        )
-
-    except HTTPException:
-        await db.rollback()
-        raise
-
+        async for chunk in rag_pipeline.astream(
+            {"question": request.question, "chat_history": chat_history}
+        ):
+            token = chunk.content
+            if token:
+                full_answer += token
+                yield json.dumps({"type": "answer", "content": token}) + "\n"
     except Exception:
         await db.rollback()
+        yield json.dumps(
+            {
+                "type": "error",
+                "content": "Something went wrong generating the response.",
+            }
+        ) + "\n"
         raise
+
+    user_message = Message(
+        session_id=session.id,
+        role=MessageRole.USER,
+        content=request.question,
+    )
+
+    assistant_message = Message(
+        session_id=session.id,
+        role=MessageRole.ASSISTANT,
+        content=full_answer,
+    )
+
+    db.add(user_message)
+    db.add(assistant_message)
+    session.updated_at = func.now()  # Update the session's updated_at timestamp\
+    print("COMMITTING SESSION", session.id)
+    await db.commit()
+
+    yield json.dumps({"type": "done"}) + "\n"
 
 
 async def get_chat_session(
     session_id: UUID,
     db: AsyncSession,
 ) -> ChatSessionResponse:
+
+    print("LOOKING FOR SESSION", session_id)
 
     res = await db.execute(
         select(ChatSession)
