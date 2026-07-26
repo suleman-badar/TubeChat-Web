@@ -133,8 +133,6 @@ async def get_chat_session(
     db: AsyncSession,
 ) -> ChatSessionResponse:
 
-    print("LOOKING FOR SESSION", session_id)
-
     res = await db.execute(
         select(ChatSession)
         .options(selectinload(ChatSession.messages), selectinload(ChatSession.video))
