@@ -53,8 +53,8 @@ def get_retriever(youtube_id: str) -> VectorStoreRetriever:
     vector_store = get_vector_store()
 
     return vector_store.as_retriever(
-        search_type="similarity",
-        search_kwargs={"k": 3, "filter": {"youtube_id": youtube_id}},
+        search_type="mmr",
+        search_kwargs={"k": 5, "filter": {"youtube_id": youtube_id}},
     )
 
 

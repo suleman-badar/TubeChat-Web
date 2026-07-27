@@ -6,7 +6,7 @@ from fastapi import HTTPException
 
 from app.database.crud.video_crud import create_video, get_video_by_youtube_id
 from app.services.transcript import get_transcript_chunks
-from app.services.vector_store import index_transcript
+from app.services.vector_store import get_vector_store, index_transcript
 from app.services.youtube import extract_youtube_id
 from app.database.models.video_model import Video
 from app.database.models.chat_session_model import ChatSession
@@ -39,9 +39,16 @@ async def index_video(url: str, db: AsyncSession) -> Video:
 
     # Check if the video is already indexed
     existing_video = await get_video_by_youtube_id(db, youtube_id)
-    if existing_video:
+    vector_store = get_vector_store()
+    res = vector_store.get(where={"youtube_id": youtube_id})
+    res = len(res.get("ids", []))
+
+    if existing_video and res > 0:
         logger.info(f"Video {youtube_id} already indexed.")
         return existing_video
+
+    if res > 0:
+        vector_store.delete(where={"youtube_id": youtube_id})
 
     chunks = get_transcript_chunks(youtube_id)
     if not chunks:
@@ -49,13 +56,17 @@ async def index_video(url: str, db: AsyncSession) -> Video:
 
     await index_transcript(chunks)
 
+    # Only create a new Postgres row if one does not already exist
+    # covers the drift case where Chroma was wiped but Postgres wasn't
+    if existing_video:
+        logger.info(f"Re-indexed vectors for existing video {youtube_id}.")
+        return existing_video
+
     video = await create_video(
         db,
         youtube_id=youtube_id,
     )
-
     logger.info(f"Video {youtube_id} indexed successfully.")
-
     return video
 
 
