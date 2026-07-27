@@ -31,7 +31,7 @@ export function IndexPage({ navigate }) {
 
     try {
       const data = await indexVideo(videoUrl)
-      console.log('Index video response:', data)
+      // console.log('Index video response:', data)
 
       if (data?.youtube_id) {
         setResult({ youtubeId: data.youtube_id, message: 'Video indexed successfully. Redirecting...' })

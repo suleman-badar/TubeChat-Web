@@ -1,12 +1,19 @@
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
 
 
-from app.database.crud.video_crud import create_video, get_video_by_youtube_id
+from app.database.crud.video_crud import (
+    create_video,
+    is_video_indexed_in_postgres,
+    is_video_indexed_in_vector_store,
+)
 from app.services.transcript import get_transcript_chunks
-from app.services.vector_store import get_vector_store, index_transcript
+from app.services.vector_store import (
+    _COLLECTION_NAME,
+    index_transcript,
+)
 from app.services.youtube import extract_youtube_id
 from app.database.models.video_model import Video
 from app.database.models.chat_session_model import ChatSession
@@ -28,7 +35,7 @@ async def index_video(url: str, db: AsyncSession) -> Video:
     1. Extract YouTube ID
     2. Check if already indexed
     3. Fetch transcript & chunk it
-    4. Store embeddings in Chroma
+    4. Store embeddings in PGVector
     5. Store metadata in PostgreSQL
     """
     youtube_id = extract_youtube_id(url)
@@ -38,17 +45,25 @@ async def index_video(url: str, db: AsyncSession) -> Video:
     logging.info(f"Indexing video with YouTube ID: {youtube_id}")
 
     # Check if the video is already indexed
-    existing_video = await get_video_by_youtube_id(db, youtube_id)
-    vector_store = get_vector_store()
-    res = vector_store.get(where={"youtube_id": youtube_id})
-    res = len(res.get("ids", []))
+    index_in_postgres = await is_video_indexed_in_postgres(db, youtube_id)
+    index_in_vector_store = await is_video_indexed_in_vector_store(db, youtube_id)
 
-    if existing_video and res > 0:
+    if index_in_postgres and index_in_vector_store:
         logger.info(f"Video {youtube_id} already indexed.")
-        return existing_video
+        return index_in_postgres
 
-    if res > 0:
-        vector_store.delete(where={"youtube_id": youtube_id})
+    if index_in_postgres and not index_in_vector_store:
+        await db.execute(
+            text("""
+            DELETE FROM langchain_pg_embedding e
+            USING langchain_pg_collection c
+            WHERE e.collection_id = c.uuid
+              AND c.name = :collection_name
+              AND e.cmetadata->>'youtube_id' = :youtube_id
+        """),
+            {"collection_name": _COLLECTION_NAME, "youtube_id": youtube_id},
+        )
+        await db.commit()
 
     chunks = get_transcript_chunks(youtube_id)
     if not chunks:
@@ -57,10 +72,10 @@ async def index_video(url: str, db: AsyncSession) -> Video:
     await index_transcript(chunks)
 
     # Only create a new Postgres row if one does not already exist
-    # covers the drift case where Chroma was wiped but Postgres wasn't
-    if existing_video:
+    # covers the drift case where PGVector was wiped but Postgres wasn't
+    if index_in_postgres:
         logger.info(f"Re-indexed vectors for existing video {youtube_id}.")
-        return existing_video
+        return index_in_postgres
 
     video = await create_video(
         db,

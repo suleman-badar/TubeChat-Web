@@ -122,7 +122,7 @@ async def stream_message(
     db.add(user_message)
     db.add(assistant_message)
     session.updated_at = func.now()  # Update the session's updated_at timestamp\
-    print("COMMITTING SESSION", session.id)
+    # print("COMMITTING SESSION", session.id)
     await db.commit()
 
     yield json.dumps({"type": "done"}) + "\n"
