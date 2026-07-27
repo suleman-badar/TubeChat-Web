@@ -16,8 +16,7 @@ from app.services.rag import build_embeddings, build_prompt, build_llm
 async def lifespan(app: FastAPI):
     # using sequential intilization here bcz it is a one time task and
     # the obj is an  internal implementation of the app and not exposed to the user
-    embeddings = build_embeddings()
-    initialize_vector_store(embeddings)
+    initialize_vector_store()
 
     # The obj needs to reach a route handler so we are storing it in the app.state.
     app.state.prompt = build_prompt()
@@ -51,4 +50,4 @@ app.include_router(auth_router)
 app.include_router(video_router)
 app.include_router(chat_router)
 
-print("Hello, FastAPI!")
+# print("Hello, FastAPI!")
