@@ -66,9 +66,15 @@ async def stream_message(
 
         if video is None:
             raise HTTPException(status_code=404, detail="Video not found.")
+
+        title = request.question.strip()
+        if len(title) > 20:
+            title = title[:57].rsplit(" ", 1)[0] + "..."
+
         session = ChatSession(
             user_id=user.id if user else None,
             video_id=video.id,
+            title=title if title else "New Chat",
         )
 
         db.add(session)

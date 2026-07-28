@@ -1,3 +1,4 @@
+
 :root {
   --bg: #100f0d;
   --bg-soft: #181512;
@@ -75,4 +76,21 @@ h2,
 h3 {
   font-family: var(--display);
   line-height: 1.05;
+}
+
+@theme {
+  --color-tc-bg: var(--bg);
+  --color-tc-bg-2: var(--bg-soft);
+  --color-tc-bg-3: var(--panel-solid);
+  --color-tc-surface: var(--panel);
+  --color-tc-surface-2: var(--panel-strong);
+  --color-tc-text: var(--text);
+  --color-tc-muted: var(--text-muted);
+  --color-tc-muted-2: var(--text-soft);
+  --color-tc-border: var(--border);
+  --color-tc-border-strong: var(--border-strong);
+  --color-tc-accent: var(--accent);
+  --color-tc-accent-2: var(--accent-2);
+  --color-tc-accent-3: var(--accent-3);
+  --color-tc-error: #c45757;
 }
