@@ -9,16 +9,14 @@ const SUGGESTIONS = [
 
 function TypingDots() {
   return (
-    <span
-      className="inline-flex items-center gap-1 py-1"
-      aria-label="Assistant is typing"
-    >
+    <span className="inline-flex items-center gap-1 py-1" aria-label="Assistant is typing">
       {[0, 1, 2].map((i) => (
         <span
           key={i}
-          className="h-1.5 w-1.5 rounded-full bg-tc-muted-2"
+          className="h-1.5 w-1.5 rounded-full bg-tc-muted-2 animate-pulse"
           style={{
-            animation: `tc-blink 1.2s ${i * 0.18}s infinite ease-in-out`,
+            animationDelay: `${i * 180}ms`,
+            animationDuration: "1.2s",
           }}
         />
       ))}
@@ -37,12 +35,12 @@ export function ChatMessageList({ messages, isLoading }) {
 
   return (
     <div
-      className="tc-scroll relative flex-1 overflow-y-auto"
+      className="relative flex-1 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       aria-live="polite"
     >
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6">
         {messages.length === 0 ? (
-          <div className="tc-fade-up flex min-h-[52vh] flex-col items-center justify-center text-center">
+          <div className="flex min-h-[52vh] flex-col items-center justify-center text-center">
             <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-tc-border bg-gradient-to-b from-tc-surface-2 to-tc-surface shadow-[0_20px_50px_-24px_rgba(0,0,0,0.9)]">
               <Sparkles
                 className="h-7 w-7 text-tc-accent"
@@ -87,7 +85,7 @@ export function ChatMessageList({ messages, isLoading }) {
           return (
             <div
               key={`${message.role}-${index}`}
-              className={`flex gap-3 tc-fade-up ${
+              className={`flex gap-3 ${
                 isUser ? "flex-row-reverse" : "flex-row"
               }`}
             >
@@ -127,7 +125,7 @@ export function ChatMessageList({ messages, isLoading }) {
                     <>
                       {message.content}
                       {!isUser && isLoading && index === lastIndex ? (
-                        <span className="tc-caret ml-0.5 inline-block h-4 w-[2px] translate-y-0.5 bg-tc-accent" />
+                        <span className="ml-0.5 inline-block h-4 w-[2px] translate-y-0.5 animate-pulse bg-tc-accent" />
                       ) : null}
                     </>
                   )}

@@ -138,7 +138,7 @@ export function ContextPanel({
           ) : null}
         </div>
 
-        <div className="tc-scroll -mr-2 flex-1 space-y-1 overflow-y-auto pr-2 pb-4">
+        <div className="-mr-2 flex-1 space-y-1 overflow-y-auto pr-2 pb-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {sessions?.length === 0 ? (
             <div className="rounded-lg border border-dashed border-tc-border px-3 py-5 text-center">
               <MessageSquare

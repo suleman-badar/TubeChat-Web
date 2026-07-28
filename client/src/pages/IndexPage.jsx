@@ -52,11 +52,11 @@ export function IndexPage({ navigate }) {
   }
 
   return (
-    <div className="index-container">
-      <div className="index-card-wrapper">
-        <div className="index-copy">
-          <h2>Index YouTube Video</h2>
-          <p className="index-subtitle">
+    <div className="flex h-full w-full overflow-y-auto items-center justify-center bg-tc-bg px-4 py-6 text-tc-text sm:px-6 lg:px-8">
+      <div className="w-full max-w-2xl rounded-3xl border border-tc-border bg-gradient-to-br from-tc-surface/95 via-tc-surface to-tc-bg-2/90 p-6 shadow-[0_28px_90px_-40px_rgba(0,0,0,0.9)] sm:p-8 lg:p-10">
+        <div className="mb-6 space-y-3">
+          <h2 className="text-3xl font-semibold tracking-tight text-tc-text sm:text-4xl">Index YouTube Video</h2>
+          <p className="max-w-2xl text-sm leading-relaxed text-tc-muted sm:text-base">
             Provide a YouTube link. We'll fetch the transcript, chunk it, embed it, and make it ready for instant AI-powered chatting.
           </p>
         </div>

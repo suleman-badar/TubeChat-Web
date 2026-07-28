@@ -22,10 +22,10 @@ export function ChatComposer({
   const message = errors.question?.message || apiError;
 
   return (
-    <div className="px-4 pb-4 pt-2 sm:px-6 sm:pb-6">
+    <div className="shrink-0 px-4 pb-4 pt-2 sm:px-6 sm:pb-6">
       <div className="mx-auto w-full max-w-3xl">
         {message ? (
-          <div className="tc-fade-up mb-2 flex items-center gap-2 rounded-xl border border-tc-error/30 bg-tc-error/10 px-3.5 py-2.5 text-tc-error">
+          <div className="mb-2 flex items-center gap-2 rounded-xl border border-tc-error/30 bg-tc-error/10 px-3.5 py-2.5 text-tc-error">
             <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={2} />
             <span className="text-sm">{message}</span>
           </div>
@@ -50,7 +50,7 @@ export function ChatComposer({
               onKeyDown={handleKeyDown}
               ref={ref}
               {...rest}
-              className="tc-scroll max-h-40 min-h-[44px] flex-1 resize-none bg-transparent px-3 py-2.5 text-[14px] leading-relaxed text-tc-text placeholder:text-tc-muted-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+              className="max-h-40 min-h-[44px] flex-1 resize-none bg-transparent px-3 py-2.5 text-[14px] leading-relaxed text-tc-text outline-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden placeholder:text-tc-muted-2 disabled:cursor-not-allowed disabled:opacity-60"
             />
 
             <button

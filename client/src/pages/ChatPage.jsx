@@ -170,21 +170,21 @@ export function ChatPage({ navigate }) {
   // Handle case where user navigates directly to /chat with no target
   if (!youtubeId && !sessionId) {
     return (
-      <div className="chat-fallback-container">
-        <div className="fallback-card">
-          <h2>No Video Selected</h2>
-          <p>Please index a new video or choose a recent conversation from the home page to start chatting.</p>
-          <div className="fallback-actions">
+      <div className="flex min-h-screen items-center justify-center bg-tc-bg px-4 py-6 text-tc-text sm:px-6 lg:px-8">
+        <div className="w-full max-w-md rounded-3xl border border-tc-border bg-tc-surface/80 p-8 text-center shadow-[0_28px_90px_-40px_rgba(0,0,0,0.9)] backdrop-blur">
+          <h2 className="text-2xl font-semibold tracking-tight text-tc-text">No Video Selected</h2>
+          <p className="mt-3 text-sm leading-relaxed text-tc-muted">Please index a new video or choose a recent conversation from the home page to start chatting.</p>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
-              className="primary-button"
+              className="inline-flex flex-1 items-center justify-center rounded-2xl bg-tc-accent px-4 py-3 font-semibold text-[#1a0f05] shadow-[0_16px_34px_-16px_rgba(239,138,59,0.7)] transition hover:brightness-110"
               onClick={() => navigate("/video/index")}
             >
               Index Video
             </button>
             <button
               type="button"
-              className="secondary-button"
+              className="inline-flex flex-1 items-center justify-center rounded-2xl border border-tc-border bg-tc-surface-2 px-4 py-3 font-semibold text-tc-text transition hover:border-tc-border-strong hover:bg-tc-surface"
               onClick={() => navigate("/")}
             >
               Go to Home
@@ -199,10 +199,10 @@ export function ChatPage({ navigate }) {
   const meta = null; // Placeholder for video metadata, can be fetched if needed
 
   return (
-   <div className="flex h-full w-full flex-col overflow-hidden bg-tc-bg text-tc-text">
+  <div className="flex h-full w-full flex-col overflow-hidden bg-tc-bg text-tc-text">
       <TopBar onMenuClick={() => setDrawerOpen(true)} />
 
-      <div className="flex min-h-0 flex-1">
+    <div className="flex min-h-0 flex-1 overflow-hidden">
         {/* Nav rail — desktop */}
         <div className="hidden w-60 shrink-0 border-r border-tc-border xl:block">
           <NavRail youtubeId={youtubeId} />
@@ -226,7 +226,7 @@ export function ChatPage({ navigate }) {
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
               onClick={() => setDrawerOpen(false)}
             />
-            <div className="tc-fade-up absolute inset-y-0 left-0 flex w-[88%] max-w-[340px] flex-col border-r border-tc-border bg-tc-bg-2 shadow-2xl">
+            <div className="absolute inset-y-0 left-0 flex w-[88%] max-w-[340px] flex-col border-r border-tc-border bg-tc-bg-2 shadow-2xl">
               <div className="flex items-center justify-between border-b border-tc-border px-4 py-3">
                 <span className="text-[13px] text-tc-muted">Menu</span>
                 <button
@@ -238,7 +238,7 @@ export function ChatPage({ navigate }) {
                   <X className="h-4 w-4" strokeWidth={2} />
                 </button>
               </div>
-              <div className="tc-scroll flex min-h-0 flex-1 flex-col overflow-y-auto">
+              <div className="flex min-h-0 flex-1 flex-col overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                 <div className="shrink-0 border-b border-tc-border pb-2">
                   <NavRail youtubeId={youtubeId} />
                 </div>
@@ -257,10 +257,10 @@ export function ChatPage({ navigate }) {
         ) : null}
 
         {/* Chat panel */}
-        <section className="flex min-w-0 flex-1 flex-col bg-tc-bg">
+        <section className="flex min-w-0 flex-1 flex-col overflow-hidden bg-tc-bg">
           {noTarget ? (
             <div className="flex flex-1 items-center justify-center px-4 py-10">
-              <div className="tc-fade-up w-full max-w-md rounded-2xl border border-tc-border bg-tc-surface/70 p-8 text-center shadow-[0_30px_80px_-40px_rgba(0,0,0,0.9)]">
+              <div className="w-full max-w-md rounded-2xl border border-tc-border bg-tc-surface/70 p-8 text-center shadow-[0_30px_80px_-40px_rgba(0,0,0,0.9)]">
                 <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-tc-accent/15 text-tc-accent">
                   <Sparkles className="h-6 w-6" strokeWidth={1.8} />
                 </div>
