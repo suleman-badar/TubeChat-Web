@@ -38,7 +38,7 @@ export function ChatMessageList({ messages, isLoading }) {
       className="relative flex-1 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       aria-live="polite"
     >
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6">
         {messages.length === 0 ? (
           <div className="flex min-h-[52vh] flex-col items-center justify-center text-center">
             <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-tc-border bg-gradient-to-b from-tc-surface-2 to-tc-surface shadow-[0_20px_50px_-24px_rgba(0,0,0,0.9)]">
@@ -85,16 +85,14 @@ export function ChatMessageList({ messages, isLoading }) {
           return (
             <div
               key={`${message.role}-${index}`}
-              className={`flex gap-3 ${
-                isUser ? "flex-row-reverse" : "flex-row"
-              }`}
+              className={`flex gap-3 ${isUser ? "flex-row-reverse" : "flex-row"
+                }`}
             >
               <div
-                className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs ${
-                  isUser
-                    ? "bg-tc-surface-2 text-tc-muted"
-                    : "bg-tc-accent/15 text-tc-accent"
-                }`}
+                className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs ${isUser
+                  ? "bg-tc-surface-2 text-tc-muted"
+                  : "bg-tc-accent/15 text-tc-accent"
+                  }`}
               >
                 {isUser ? (
                   "You"
@@ -104,20 +102,18 @@ export function ChatMessageList({ messages, isLoading }) {
               </div>
 
               <div
-                className={`flex max-w-[85%] flex-col ${
-                  isUser ? "items-end" : "items-start"
-                }`}
+                className={`flex max-w-[85%] flex-col ${isUser ? "items-end" : "items-start"
+                  }`}
               >
                 <span className="mb-1 px-1 text-xs text-tc-muted-2">
                   {isUser ? "You" : "AI Assistant"}
                 </span>
 
                 <div
-                  className={`whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[14px] leading-relaxed ${
-                    isUser
-                      ? "rounded-tr-sm bg-tc-accent text-[#1a0f05]"
-                      : "rounded-tl-sm border border-tc-border bg-tc-surface text-tc-text"
-                  }`}
+                  className={`whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[14px] leading-relaxed ${isUser
+                    ? "rounded-tr-sm bg-tc-accent text-[#1a0f05]"
+                    : "rounded-tl-sm border border-tc-border bg-tc-surface text-tc-text"
+                    }`}
                 >
                   {isStreamingBubble ? (
                     <TypingDots />

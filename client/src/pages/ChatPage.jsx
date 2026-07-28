@@ -292,7 +292,7 @@ export function ChatPage({ navigate }) {
           ) : (
             <>
               {/* Chat header with tab */}
-              <header className="flex items-center gap-3 border-b border-tc-border bg-tc-bg-3/60 px-4 py-2.5 backdrop-blur sm:px-6">
+              <header className="flex items-center gap-3 border-b border-tc-border bg-tc-bg-3/60 px-2 py-2.5 backdrop-blur sm:px-6">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-tc-accent/15 text-tc-accent">
                   <Sparkles className="h-4 w-4" strokeWidth={1.9} />
                 </span>
