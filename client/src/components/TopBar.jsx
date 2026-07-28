@@ -78,14 +78,7 @@ export function TopBar({ onMenuClick }) {
           </button>
         ) : null}
 
-        <button
-          type="button"
-          onClick={() => navigate("/video/index")}
-          className="flex items-center gap-1.5 rounded-lg bg-tc-accent px-3 py-1.5 text-[13px] text-[#1a0f05] shadow-[0_8px_20px_-8px_rgba(239,138,59,0.7)] transition-all hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-tc-accent focus-visible:ring-offset-2 focus-visible:ring-offset-tc-bg-3"
-        >
-          <Zap className="h-3.5 w-3.5" strokeWidth={2.2} />
-          Index Video
-        </button>
+        
       </div>
     </header>
   );

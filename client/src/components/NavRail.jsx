@@ -5,6 +5,7 @@ import {
   LogOut,
   LogIn,
   ChevronRight,
+  Video,
 } from "lucide-react";
 
 import { useAuth } from "../contexts/AppContext";
@@ -12,29 +13,9 @@ import { useAuth } from "../contexts/AppContext";
 export function NavRail({ youtubeId }) {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const meta = null;
 
   return (
     <div className="flex h-full w-full flex-col bg-tc-bg-2/60">
-      {/* Account */}
-      <div className="px-3 pt-4">
-        <div className="flex items-center gap-2.5 rounded-xl border border-tc-border bg-tc-surface/60 p-2.5">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-tc-accent/15 text-[13px] text-tc-accent">
-            {user ? user.email.charAt(0).toUpperCase() : "G"}
-          </span>
-
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] text-tc-text">
-              {user ? user.email.split("@")[0] : "Guest"}
-            </p>
-
-            <p className="truncate text-[11px] text-tc-muted-2">
-              {user ? "Signed in" : "Not signed in"}
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Navigation */}
       <nav className="px-3 pt-4">
         <p className="px-2 pb-1.5 text-[11px] uppercase tracking-wider text-tc-muted-2">
@@ -64,12 +45,12 @@ export function NavRail({ youtubeId }) {
           }
           className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] text-tc-muted transition-colors hover:bg-tc-surface hover:text-tc-text"
         >
-          <Home
+          <Video
             className="h-4 w-4 shrink-0 text-tc-error/80"
             strokeWidth={2}
           />
           <span className="truncate">
-            {meta ? meta.title : "No video"}
+            {youtubeId ? youtubeId : "No video selected"}
           </span>
         </button>
       </div>

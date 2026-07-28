@@ -61,26 +61,15 @@ export function ContextPanel({
       {/* Video card */}
       <div className="p-4">
         <div className="overflow-hidden rounded-xl border border-tc-border bg-tc-surface/70">
-          <div className="flex items-center justify-center bg-gradient-to-br from-tc-surface-2 to-tc-bg-3 py-6">
-            <Plus
-              className="h-8 w-8 text-tc-error/80"
-              strokeWidth={1.8}
+          <div className="group aspect-video overflow-hidden rounded-t-xl">
+            <img
+              src={`https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`}
+              alt="Video thumbnail"
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              onError={(e) => {
+                e.currentTarget.src = `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+              }}
             />
-          </div>
-
-          <div className="p-3">
-            <p className="line-clamp-2 text-[13px] leading-snug text-tc-text">
-              {meta ? meta.title : "No video selected"}
-            </p>
-
-            {meta ? (
-              <p className="mt-1 flex items-center gap-1.5 text-[11px] text-tc-muted-2">
-                <span className="truncate">{meta.channel}</span>
-                <span className="text-tc-border-strong">•</span>
-                <Clock className="h-3 w-3" strokeWidth={2} />
-                {meta.duration}
-              </p>
-            ) : null}
           </div>
         </div>
 
@@ -158,26 +147,23 @@ export function ContextPanel({
                   key={session.id}
                   type="button"
                   onClick={() => onSessionClick(session.id)}
-                  className={`group flex w-full items-start gap-2.5 rounded-lg border px-2.5 py-2 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-tc-accent ${
-                    active
-                      ? "border-tc-accent/40 bg-tc-accent/10"
-                      : "border-transparent hover:border-tc-border hover:bg-tc-surface"
-                  }`}
+                  className={`group flex w-full items-start gap-2.5 rounded-lg border px-2.5 py-2 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-tc-accent ${active
+                    ? "border-tc-accent/40 bg-tc-accent/10"
+                    : "border-transparent hover:border-tc-border hover:bg-tc-surface"
+                    }`}
                 >
                   <MessageSquare
-                    className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${
-                      active ? "text-tc-accent" : "text-tc-muted-2"
-                    }`}
+                    className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${active ? "text-tc-accent" : "text-tc-muted-2"
+                      }`}
                     strokeWidth={2}
                   />
 
                   <span className="min-w-0 flex-1">
                     <span
-                      className={`line-clamp-1 text-[13px] ${
-                        active
-                          ? "text-tc-text"
-                          : "text-tc-muted group-hover:text-tc-text"
-                      }`}
+                      className={`line-clamp-1 text-[13px] ${active
+                        ? "text-tc-text"
+                        : "text-tc-muted group-hover:text-tc-text"
+                        }`}
                     >
                       {session.title}
                     </span>

@@ -96,7 +96,7 @@ export function ChatPage({ navigate }) {
       }
     }
     loadSessions();
-  }, [youtubeId, user]); // Refresh sidebar when user logged in/out or when video changes
+  }, [youtubeId, user, sessionId]); // Refresh sidebar when user logged in/out or when video changes
 
 
 
