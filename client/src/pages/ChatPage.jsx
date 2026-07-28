@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { Sparkles, Video, Home, X } from "lucide-react";
+
 
 import { ChatComposer } from "../components/ChatComposer";
 import { ChatMessageList } from "../components/ChatMessageList";
-import { ChatSidebar } from "../components/ChatSidebar";
+import { TopBar } from "../components/TopBar";
+import { NavRail } from "../components/NavRail";
+import { ContextPanel } from "../components/ContextPanel";
+
 import { useAuth } from "../contexts/AppContext";
 
 import {
@@ -33,6 +38,7 @@ export function ChatPage({ navigate }) {
   const [sessions, setSessions] = useState([]);
   const [apiError, setApiError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const {
     register,
@@ -44,6 +50,9 @@ export function ChatPage({ navigate }) {
       question: "",
     },
   });
+
+  const { user } = useAuth(); // Access user from AuthContext
+
 
   // Sync youtubeId when URL query changes
   useEffect(() => {
@@ -73,7 +82,6 @@ export function ChatPage({ navigate }) {
   }, [sessionId]);
 
 
-  const { user } = useAuth(); // Access user from AuthContext
 
   // Load sidebar conversations when active video changes
   useEffect(() => {
@@ -187,29 +195,136 @@ export function ChatPage({ navigate }) {
     );
   }
 
+  const noTarget = !youtubeId && !sessionId;
+  const meta = null; // Placeholder for video metadata, can be fetched if needed
+
   return (
-    <section className="page-card chat-layout chat-shell">
-      <ChatSidebar
-        youtubeId={youtubeId}
-        sessions={sessions}
-        currentSessionId={sessionId}
-        onSessionClick={handleSessionClick}
-        onNewChat={handleNewChat}
-      />
-      <section className="panel chat-panel">
-        <ChatMessageList
-          messages={messages}
-          isLoading={isLoading}
-        />
-        <ChatComposer
-          register={register}
-          errors={errors}
-          onSubmit={handleSubmit(onSubmit)}
-          isLoading={isLoading}
-          isDisabled={!youtubeId}
-          apiError={apiError}
-        />
-      </section>
-    </section>
+   <div className="flex h-full w-full flex-col overflow-hidden bg-tc-bg text-tc-text">
+      <TopBar onMenuClick={() => setDrawerOpen(true)} />
+
+      <div className="flex min-h-0 flex-1">
+        {/* Nav rail — desktop */}
+        <div className="hidden w-60 shrink-0 border-r border-tc-border xl:block">
+          <NavRail youtubeId={youtubeId} />
+        </div>
+
+        {/* Context panel — desktop */}
+        <div className="hidden w-72 shrink-0 border-r border-tc-border lg:block">
+          <ContextPanel
+            youtubeId={youtubeId}
+            sessions={sessions}
+            currentSessionId={sessionId}
+            onSessionClick={handleSessionClick}
+            onNewChat={handleNewChat}
+          />
+        </div>
+
+        {/* Mobile drawer: rail + context panel stacked */}
+        {drawerOpen ? (
+          <div className="fixed inset-0 z-40 lg:hidden">
+            <div
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setDrawerOpen(false)}
+            />
+            <div className="tc-fade-up absolute inset-y-0 left-0 flex w-[88%] max-w-[340px] flex-col border-r border-tc-border bg-tc-bg-2 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-tc-border px-4 py-3">
+                <span className="text-[13px] text-tc-muted">Menu</span>
+                <button
+                  type="button"
+                  onClick={() => setDrawerOpen(false)}
+                  aria-label="Close menu"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-tc-muted-2 hover:bg-tc-surface hover:text-tc-text"
+                >
+                  <X className="h-4 w-4" strokeWidth={2} />
+                </button>
+              </div>
+              <div className="tc-scroll flex min-h-0 flex-1 flex-col overflow-y-auto">
+                <div className="shrink-0 border-b border-tc-border pb-2">
+                  <NavRail youtubeId={youtubeId} />
+                </div>
+                <div className="min-h-[420px] flex-1">
+                  <ContextPanel
+                    youtubeId={youtubeId}
+                    sessions={sessions}
+                    currentSessionId={sessionId}
+                    onSessionClick={handleSessionClick}
+                    onNewChat={handleNewChat}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {/* Chat panel */}
+        <section className="flex min-w-0 flex-1 flex-col bg-tc-bg">
+          {noTarget ? (
+            <div className="flex flex-1 items-center justify-center px-4 py-10">
+              <div className="tc-fade-up w-full max-w-md rounded-2xl border border-tc-border bg-tc-surface/70 p-8 text-center shadow-[0_30px_80px_-40px_rgba(0,0,0,0.9)]">
+                <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-tc-accent/15 text-tc-accent">
+                  <Sparkles className="h-6 w-6" strokeWidth={1.8} />
+                </div>
+                <h2 className="text-xl text-tc-text">No video selected</h2>
+                <p className="mt-2 text-sm leading-relaxed text-tc-muted">
+                  Index a new video or choose a recent conversation to start
+                  chatting.
+                </p>
+                <div className="mt-6 flex flex-col gap-2.5 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/video/index")}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-tc-accent px-4 py-2.5 text-sm text-[#1a0f05] transition-all hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-tc-accent focus-visible:ring-offset-2 focus-visible:ring-offset-tc-bg"
+                  >
+                    <Video className="h-4 w-4" strokeWidth={2.1} />
+                    Index video
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/")}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-tc-border bg-tc-surface px-4 py-2.5 text-sm text-tc-text transition-colors hover:bg-tc-surface-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-tc-accent"
+                  >
+                    <Home className="h-4 w-4" strokeWidth={2.1} />
+                    Go home
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Chat header with tab */}
+              <header className="flex items-center gap-3 border-b border-tc-border bg-tc-bg-3/60 px-4 py-2.5 backdrop-blur sm:px-6">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-tc-accent/15 text-tc-accent">
+                  <Sparkles className="h-4 w-4" strokeWidth={1.9} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h1 className="truncate text-[14px] leading-tight text-tc-text">
+                    AI Assistant
+                  </h1>
+                  <p className="truncate text-[11px] text-tc-muted-2">
+                    {meta ? meta.title : "Chatting with the transcript"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 rounded-lg border border-tc-border bg-tc-surface/50 p-0.5">
+                  <span className="rounded-md bg-tc-surface-2 px-3 py-1 text-[12px] text-tc-text">
+                    Chat
+                  </span>
+                </div>
+              </header>
+
+              <ChatMessageList messages={messages} isLoading={isLoading} />
+
+              <ChatComposer
+                register={register}
+                errors={errors}
+                onSubmit={handleSubmit(onSubmit)}
+                isLoading={isLoading}
+                isDisabled={!youtubeId}
+                apiError={apiError}
+              />
+            </>
+          )}
+        </section>
+      </div>
+    </div>
   );
 }
