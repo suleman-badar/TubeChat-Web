@@ -1,12 +1,12 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, String, func, Uuid, DateTime, Text
+from sqlalchemy import String, func, Uuid, DateTime
 
 from app.database.base_model import Base
+from app.database.models.chat_session_model import ChatSession
+from app.database.models.subscription_model import Subscription
 
 import uuid
 from datetime import datetime
-
-from app.database.models.chat_session_model import ChatSession
 
 
 class User(Base):
@@ -27,4 +27,10 @@ class User(Base):
 
     chat_sessions: Mapped[list["ChatSession"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
+    )
+
+    subscriptions: Mapped["Subscription"] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        uselist=False,
     )

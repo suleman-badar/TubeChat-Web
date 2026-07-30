@@ -152,3 +152,10 @@ export async function getCurrentUser() {
   // console.log("Current user data: API", data);
   return data;
 }
+
+
+export async function getBillingConfig() {
+  const  data  = await api.get('/billing/config');
+  console.log("Billing config data: API", data);
+  return data;
+}

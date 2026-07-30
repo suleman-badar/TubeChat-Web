@@ -39,6 +39,7 @@ export function ChatPage({ navigate }) {
   const [apiError, setApiError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [plan, setPlan] = useState("Free");
 
   const {
     register,
@@ -52,6 +53,18 @@ export function ChatPage({ navigate }) {
   });
 
   const { user } = useAuth(); // Access user from AuthContext
+
+  useEffect(() => {
+    async function getPlan() {
+      try {
+        const { data } = await getBillingConfig();
+        setPlan(data.plan.toLowerCase());
+      } catch (error) {
+        console.error("Error fetching billing config:", error);
+      }
+    }
+    getPlan();
+  }, []);
 
 
   // Sync youtubeId when URL query changes
@@ -205,7 +218,7 @@ export function ChatPage({ navigate }) {
     <div className="flex min-h-0 flex-1 overflow-hidden">
         {/* Nav rail — desktop */}
         <div className="hidden w-60 shrink-0 border-r border-tc-border xl:block">
-          <NavRail youtubeId={youtubeId} />
+          <NavRail youtubeId={youtubeId} plan={plan} />
         </div>
 
         {/* Context panel — desktop */}

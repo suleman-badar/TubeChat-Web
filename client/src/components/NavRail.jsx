@@ -1,4 +1,5 @@
 import { useNavigate, Link } from "react-router";
+import { useState } from "react";
 import {
   Home,
   Sparkles,
@@ -10,7 +11,7 @@ import {
 
 import { useAuth } from "../contexts/AppContext";
 
-export function NavRail({ youtubeId }) {
+export function NavRail({ youtubeId, plan }) {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
@@ -58,34 +59,64 @@ export function NavRail({ youtubeId }) {
       <div className="flex-1" />
 
       {/* Plan card */}
-      <div className="px-3 pb-3">
-        <div className="rounded-xl border border-tc-border bg-gradient-to-b from-tc-surface-2 to-tc-surface p-3.5">
-          <p className="text-[11px] uppercase tracking-wider text-tc-muted-2">
-            Current plan
-          </p>
+      {
+        plan === "free" ? (
+          <div className="px-3 pb-3">
+            <div className="rounded-xl border border-tc-border bg-gradient-to-b from-tc-surface-2 to-tc-surface p-3.5">
+              <p className="text-[11px] uppercase tracking-wider text-tc-muted-2">
+                Current plan
+              </p>
 
-          <div className="mt-1 flex items-center gap-2">
-            <Sparkles
-              className="h-4 w-4 text-tc-accent-2"
-              strokeWidth={2}
-            />
-            <span className="text-[15px] text-tc-text">Free</span>
+              <div className="mt-1 flex items-center gap-2">
+                <Sparkles
+                  className="h-4 w-4 text-tc-accent-2"
+                  strokeWidth={2}
+                />
+                <span className="text-[15px] text-tc-text">Free</span>
+              </div>
+
+              <p className="mt-1.5 text-[12px] leading-snug text-tc-muted-2">
+                2 daily queries. Unlock unlimited chats and longer videos.
+              </p>
+
+              <button
+                type="button"
+                onClick={() => navigate("/pricing")}
+                className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-tc-accent/40 bg-tc-accent/10 px-3 py-2 text-[13px] text-tc-accent transition-colors hover:bg-tc-accent/20"
+              >
+                Upgrade to Pro
+                <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.2} />
+              </button>
+            </div>
           </div>
+        ) : (
+          <div className="px-3 pb-3">
+            <div className="rounded-xl border border-emerald-500/20 bg-gradient-to-b from-emerald-500/10 to-tc-surface p-3.5">
+              <p className="text-[11px] uppercase tracking-wider text-tc-muted-2">
+                Current plan
+              </p>
 
-          <p className="mt-1.5 text-[12px] leading-snug text-tc-muted-2">
-            2 daily queries. Unlock unlimited chats and longer videos.
-          </p>
+              <div className="mt-1 flex items-center gap-2">
+                <Sparkles
+                  className="h-4 w-4 text-emerald-400"
+                  strokeWidth={2}
+                />
+                <span className="text-[15px] font-medium text-tc-text">
+                  TubeChat Pro
+                </span>
+              </div>
 
-          <button
-            type="button"
-            className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-tc-accent/40 bg-tc-accent/10 px-3 py-2 text-[13px] text-tc-accent transition-colors hover:bg-tc-accent/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-tc-accent"
-          >
-            Upgrade to Pro
-            <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.2} />
-          </button>
-        </div>
-      </div>
+              <p className="mt-1.5 text-[12px] leading-snug text-tc-muted-2">
+                You're enjoying unlimited video indexing and unlimited AI conversations.
+              </p>
 
+              <div className="mt-3 flex items-center justify-center rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-[13px] font-medium text-emerald-400">
+                ✓ Pro Plan Active
+              </div>
+            </div>
+          </div>
+        )
+      }
       {/* Auth */}
       <div className="border-t border-tc-border p-3">
         {user ? (
