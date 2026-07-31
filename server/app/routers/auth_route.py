@@ -7,7 +7,13 @@ from app.schemas.auth_schema import (
     UserLoginRequest,
     UserMeResponse,
 )
-from app.services.auth_service import register_user, login_user, create_jwt_token, create_guest_user, is_guest_user
+from app.services.auth_service import (
+    register_user,
+    login_user,
+    create_jwt_token,
+    create_guest_user,
+    is_guest_user,
+)
 from app.dependencies.auth_dependency import get_current_user, get_optional_user
 from app.dependencies.db_dependency import get_db
 
@@ -24,7 +30,7 @@ def _set_auth_cookie(response: Response, token: str):
         value=token,
         httponly=True,
         secure=True,
-        samesite="lax",
+        samesite="None",
         max_age=COOKIE_MAX_AGE,
         path="/",
     )
@@ -60,7 +66,7 @@ def logout(response: Response):
         key=COOKIE_NAME,
         httponly=True,
         secure=True,
-        samesite="lax",
+        samesite="None",
         path="/",
     )
     return {"message": "Logged out successfully"}
@@ -83,4 +89,3 @@ async def me(
         created_at=user.created_at,
         is_guest=is_guest_user(user.email),
     )
-
