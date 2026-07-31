@@ -16,6 +16,7 @@ import {
   chatStream,
   getChatSession,
   getVideoChatSessions,
+  getBillingConfig,
 } from "../services/api";
 
 function formatError(error) {
@@ -39,6 +40,7 @@ export function ChatPage({ navigate }) {
   const [apiError, setApiError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [plan, setPlan] = useState("free");
 
   const {
     register,
@@ -52,6 +54,24 @@ export function ChatPage({ navigate }) {
   });
 
   const { user } = useAuth(); // Access user from AuthContext
+
+  useEffect(() => {
+    // Guest users are always on the free plan — no billing call needed
+    if (!user || user.is_guest) {
+      setPlan("free");
+      return;
+    }
+    async function getPlan() {
+      try {
+        const { data } = await getBillingConfig();
+        setPlan(data.plan.toLowerCase());
+      } catch (error) {
+        console.error("Error fetching billing config:", error);
+        setPlan("free"); // safe default on error
+      }
+    }
+    getPlan();
+  }, [user]); // re-run whenever the auth user changes (login / logout)
 
 
   // Sync youtubeId when URL query changes
@@ -205,7 +225,7 @@ export function ChatPage({ navigate }) {
     <div className="flex min-h-0 flex-1 overflow-hidden">
         {/* Nav rail — desktop */}
         <div className="hidden w-60 shrink-0 border-r border-tc-border xl:block">
-          <NavRail youtubeId={youtubeId} />
+          <NavRail youtubeId={youtubeId} plan={plan} />
         </div>
 
         {/* Context panel — desktop */}

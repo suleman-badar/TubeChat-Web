@@ -128,7 +128,24 @@ export function ContextPanel({
         </div>
 
         <div className="-mr-2 flex-1 space-y-1 overflow-y-auto pr-2 pb-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-          {sessions?.length === 0 ? (
+          {user?.is_guest ? (
+            <div className="rounded-lg border border-dashed border-tc-border px-3 py-5 text-center">
+              <MessageSquare
+                className="mx-auto h-4 w-4 text-tc-muted-2"
+                strokeWidth={1.8}
+              />
+              <p className="mt-1.5 text-[12px] text-tc-muted-2 leading-relaxed">
+                Chat history is not saved in guest mode.
+              </p>
+              <button
+                type="button"
+                onClick={() => navigate("/login")}
+                className="mt-3.5 w-full rounded-lg bg-tc-accent px-3 py-1.5 text-[12px] font-medium text-[#1a0f05] transition-all hover:brightness-110"
+              >
+                Log in to save history
+              </button>
+            </div>
+          ) : sessions?.length === 0 ? (
             <div className="rounded-lg border border-dashed border-tc-border px-3 py-5 text-center">
               <MessageSquare
                 className="mx-auto h-4 w-4 text-tc-muted-2"

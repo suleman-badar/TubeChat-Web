@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Response, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models.user_model import User
@@ -7,8 +7,8 @@ from app.schemas.auth_schema import (
     UserLoginRequest,
     UserMeResponse,
 )
-from app.services.auth_service import register_user, login_user, create_jwt_token
-from app.dependencies.auth_dependency import get_current_user
+from app.services.auth_service import register_user, login_user, create_jwt_token, create_guest_user, is_guest_user
+from app.dependencies.auth_dependency import get_current_user, get_optional_user
 from app.dependencies.db_dependency import get_db
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -67,5 +67,20 @@ def logout(response: Response):
 
 
 @router.get("/me", response_model=UserMeResponse)
-async def me(user: User = Depends(get_current_user)):
-    return UserMeResponse.model_validate(user)
+async def me(
+    request: Request,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+):
+    user = await get_optional_user(request, db)
+    if not user:
+        user = await create_guest_user(db)
+        token = create_jwt_token(user.id)
+        _set_auth_cookie(response, token)
+    return UserMeResponse(
+        id=user.id,
+        email=user.email,
+        created_at=user.created_at,
+        is_guest=is_guest_user(user.email),
+    )
+

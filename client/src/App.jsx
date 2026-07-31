@@ -6,6 +6,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { AppShell } from "./components/AppShell";
 import { AuthProvider } from "./contexts/AppContext";
+import { PricingPage } from "./pages/PricingPage";
 
 function AppRoutes() {
   const navigate = useNavigate();
@@ -29,6 +30,8 @@ function AppRoutes() {
 
       {/* Redirect any unknown route to home */}
       <Route path="*" element={<Navigate to="/" replace />} />
+
+      <Route path="/pricing" element={<PricingPage />} />
     </Routes>
   );
 }

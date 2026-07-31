@@ -13,6 +13,7 @@ from sqlalchemy.orm import selectinload
 from app.database.models.chat_session_model import ChatSession
 from app.database.models.user_model import User
 from app.database.models.video_model import Video
+from app.database.models.subscription_model import Subscription
 from app.database.models.message_model import Message, MessageRole
 from app.schemas.chat_schema import (
     ChatRequest,
@@ -24,6 +25,127 @@ from app.schemas.chat_schema import (
 from app.schemas.video_schema import RecentChatSessionResponse
 from app.services.vector_store import get_retriever, get_chat_history
 from app.services.rag import create_rag_pipeline
+from app.services.auth_service import is_guest_user
+
+
+async def validate_limits(
+    request: ChatRequest,
+    db: AsyncSession,
+    user: User | None = None,
+    client_ip: str | None = None,
+):
+    # Enforce IP-based rate limit for guest users to prevent credit-burning abuse
+    is_guest = True
+    if user:
+        is_guest = is_guest_user(user.email)
+    
+    if is_guest and client_ip:
+        from app.services.rate_limit_service import check_and_record_message_limit
+        check_and_record_message_limit(client_ip)
+
+    if request.session_id:
+        res = await db.execute(
+            select(ChatSession)
+            .options(selectinload(ChatSession.video))
+            .where(ChatSession.id == request.session_id)
+        )
+        session = res.scalar_one_or_none()
+
+        if session is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Stream Chat session not found.",
+            )
+
+        res = await db.execute(
+            select(func.count(Message.id)).where(
+                Message.session_id == session.id, Message.role == MessageRole.USER
+            )
+        )
+        no_of_messages = res.scalar_one_or_none() or 0
+
+        is_guest = True
+        plan = "free"
+        if user:
+            is_guest = is_guest_user(user.email)
+            res = await db.execute(
+                select(Subscription).where(Subscription.user_id == user.id)
+            )
+            subscription = res.scalar_one_or_none()
+            plan = subscription.plan if subscription else "free"
+
+        if is_guest:
+            limit = 8
+        elif plan == "free":
+            limit = 15
+        else:
+            limit = 100
+
+        if no_of_messages >= limit:
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "code": "MESSAGE_LIMIT_REACHED",
+                    "message": f"You have reached the maximum number of messages ({limit}) for this chat session. Please start a new chat session.",
+                    "upgrade_required": True,
+                },
+            )
+
+    else:
+        if request.youtube_id is None:
+            raise HTTPException(
+                status_code=400, detail="youtube_id is required for a new chat."
+            )
+        res = await db.execute(
+            select(Video).where(Video.youtube_id == request.youtube_id)
+        )
+        video = res.scalar_one_or_none()
+
+        if video is None:
+            raise HTTPException(status_code=404, detail="Video not found.")
+
+        # Check if the user already has a session for this video
+        res = await db.execute(
+            select(ChatSession)
+            .where(ChatSession.user_id == (user.id if user else None))
+            .where(ChatSession.video_id == video.id)
+            .limit(1)
+        )
+        existing_sess = res.scalar_one_or_none()
+
+        if not existing_sess:
+            # Fetch subscription plan
+            is_guest = True
+            plan = "free"
+            if user:
+                is_guest = is_guest_user(user.email)
+                res = await db.execute(
+                    select(Subscription).where(Subscription.user_id == user.id)
+                )
+                subscription = res.scalar_one_or_none()
+                plan = subscription.plan if subscription else "free"
+
+            if plan == "pro":
+                limit = 15
+            else:
+                limit = 2
+
+            # Count distinct videos the user has sessions for
+            res = await db.execute(
+                select(func.count(func.distinct(ChatSession.video_id))).where(
+                    ChatSession.user_id == (user.id if user else None)
+                )
+            )
+            count = res.scalar_one_or_none() or 0
+            if count >= limit:
+                raise HTTPException(
+                    status_code=403,
+                    detail={
+                        "code": "VIDEO_LIMIT_REACHED",
+                        "message": f"You have reached the maximum limit of {limit} videos on the {plan} plan. Please upgrade to chat with more videos.",
+                        "upgrade_required": True,
+                    },
+                )
 
 
 async def stream_message(
@@ -48,17 +170,15 @@ async def stream_message(
 
         if session is None:
             raise HTTPException(
-                status_code=404, detail="Stream Chat session not found."
+                status_code=404,
+                detail="Stream Chat session not found.",
             )
         video = session.video
+
     # ---------------------------------------------------------
     # New chat
     # ---------------------------------------------------------
     else:
-        if request.youtube_id is None:
-            raise HTTPException(
-                status_code=400, detail="youtube_id is required for a new chat."
-            )
         res = await db.execute(
             select(Video).where(Video.youtube_id == request.youtube_id)
         )
@@ -137,16 +257,33 @@ async def stream_message(
 async def get_chat_session(
     session_id: UUID,
     db: AsyncSession,
+    user: User | None = None,
 ) -> ChatSessionResponse:
 
     res = await db.execute(
         select(ChatSession)
-        .options(selectinload(ChatSession.messages), selectinload(ChatSession.video))
+        .options(
+            selectinload(ChatSession.messages),
+            selectinload(ChatSession.video),
+            selectinload(ChatSession.user),
+        )
         .where(ChatSession.id == session_id)
     )
     session = res.scalar_one_or_none()
     if session is None:
         raise HTTPException(status_code=404, detail="Chat session not found.")
+
+    is_guest = False
+    if user:
+        is_guest = is_guest_user(user.email)
+    elif session.user:
+        is_guest = is_guest_user(session.user.email)
+
+    messages = []
+    if not is_guest:
+        messages = [
+            MessageResponse.model_validate(message) for message in session.messages
+        ]
 
     return ChatSessionResponse(
         session=ChatSessionInfo(
@@ -156,9 +293,7 @@ async def get_chat_session(
             created_at=session.created_at,
             updated_at=session.updated_at,
         ),
-        messages=[
-            MessageResponse.model_validate(message) for message in session.messages
-        ],
+        messages=messages,
     )
 
 
@@ -167,7 +302,7 @@ async def get_recent_chat_sessions(
     user: User | None = None,
 ) -> list[RecentChatSessionResponse]:
 
-    if user is None:
+    if user is None or is_guest_user(user.email):
         return []
 
     res = await db.execute(

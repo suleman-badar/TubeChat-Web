@@ -29,7 +29,7 @@ function formatError(error) {
 
 export function IndexPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, initializeAuth } = useAuth();
 
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
@@ -54,7 +54,7 @@ export function IndexPage() {
     try {
       const data = await indexVideo(videoUrl);
 
-      if (data?.youtube_id) {
+      if (data?.session_id) {
         setResult({
           youtubeId: data.youtube_id,
           message: "Video indexed successfully. Redirecting...",
@@ -62,8 +62,11 @@ export function IndexPage() {
 
         reset();
 
+        // Refresh auth state in case a guest cookie was generated
+        await initializeAuth();
+
         setTimeout(() => {
-          navigate(`/chat?youtube_id=${encodeURIComponent(data.youtube_id)}`);
+          navigate(`/chat?session_id=${data.session_id}`);
         }, 1200);
 
         return;
@@ -102,7 +105,7 @@ export function IndexPage() {
 
           <div className="flex items-center gap-3">
 
-            {user ? (
+            {user && !user.is_guest ? (
               <div className="rounded-full border border-tc-border bg-tc-surface px-5 py-2 text-sm font-medium shadow-sm">
                 {user.email}
               </div>

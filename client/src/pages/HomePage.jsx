@@ -53,7 +53,7 @@ export function HomePage({ navigate }) {
         </div>
       </section>
 
-      {!user && (
+      {(!user || user.is_guest) && (
         <div className="rounded-2xl border border-tc-border bg-tc-surface/65 px-4 py-3 text-center text-sm text-tc-muted">
           <p>
             Using as Guest. <Link to="/login" className="font-medium text-tc-accent hover:underline">Log in</Link> to save and access your conversation history across devices!
@@ -70,7 +70,7 @@ export function HomePage({ navigate }) {
         ) : recentSessions.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-tc-border px-5 py-10 text-center text-sm text-tc-muted">
             <p className="mx-auto max-w-xl">
-              {user
+              {user && !user.is_guest
                 ? "No recent sessions found. Index a video to start chatting!"
                 : "Log in to view saved chat sessions, or index a video to start chatting as guest."}
             </p>

@@ -1,6 +1,5 @@
 from uuid import UUID
-
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from langchain_openai import ChatOpenAI
@@ -16,6 +15,7 @@ from app.services.chat_service import (
     stream_message,
     get_chat_session,
     get_recent_chat_sessions,
+    validate_limits,
 )
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
@@ -29,11 +29,13 @@ router = APIRouter(prefix="/chat", tags=["Chat"])
 @router.post("/messages/stream", response_model=ChatResponse)
 async def send_stream_route(
     request: ChatRequest,
+    req: Request,
     db: AsyncSession = Depends(get_db),
     user: User | None = Depends(get_optional_user),
     llm: ChatOpenAI = Depends(get_llm),
     prompt: ChatPromptTemplate = Depends(get_prompt),
 ):
+    await validate_limits(request, db, user, client_ip=req.client.host)
     return StreamingResponse(
         stream_message(request, db, user=user, llm=llm, prompt=prompt),
         media_type="application/x-ndjson",
@@ -58,5 +60,6 @@ async def recent_sessions(
 async def get_session(
     session_id: UUID,
     db: AsyncSession = Depends(get_db),
+    user: User | None = Depends(get_optional_user),
 ):
-    return await get_chat_session(session_id, db)
+    return await get_chat_session(session_id, db, user=user)

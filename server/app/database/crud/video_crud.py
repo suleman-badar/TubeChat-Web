@@ -14,7 +14,7 @@ async def is_video_indexed_in_postgres(
 
 async def is_video_indexed_in_vector_store(db: AsyncSession, youtube_id: str) -> bool:
 
-    result = await db.execute(
+    res = await db.execute(
         text("""
             SELECT 1 FROM langchain_pg_embedding e
             JOIN langchain_pg_collection c ON e.collection_id = c.uuid
@@ -24,7 +24,7 @@ async def is_video_indexed_in_vector_store(db: AsyncSession, youtube_id: str) ->
              """),
         {"collection_name": _COLLECTION_NAME, "youtube_id": youtube_id},
     )
-    return result.first() is not None
+    return res.first() is not None
 
 
 async def create_video(

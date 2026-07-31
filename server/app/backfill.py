@@ -16,8 +16,8 @@ from app.services.vector_store import initialize_vector_store
 async def backfill():
     initialize_vector_store()
     async with AsyncSessionLocal() as db:
-        result = await db.execute(select(Video))
-        videos = result.scalars().all()
+        res = await db.execute(select(Video))
+        videos = res.scalars().all()
         for video in videos:
             url = f"https://www.youtube.com/watch?v={video.youtube_id}"
             try:
