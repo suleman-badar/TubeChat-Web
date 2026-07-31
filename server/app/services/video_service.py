@@ -1,7 +1,8 @@
-from sqlalchemy import select, text
+from sqlalchemy import select, text, func
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
+from app.database.models.subscription_model import Subscription
 
 
 from app.database.crud.video_crud import (
@@ -20,6 +21,7 @@ from app.database.models.chat_session_model import ChatSession
 from app.database.models.user_model import User
 
 from app.schemas.video_schema import RecentChatSessionResponse
+from app.services.auth_service import is_guest_user
 
 
 import logging
@@ -126,3 +128,85 @@ async def get_video_chat_sessions(
         )
         for row in rows
     ]
+
+
+async def index_video_for_user(
+    url: str,
+    user: User,
+    db: AsyncSession,
+) -> tuple[Video, ChatSession]:
+    # Extract YouTube ID
+    youtube_id = extract_youtube_id(url)
+    if not youtube_id:
+        raise HTTPException(status_code=400, detail="Invalid YouTube URL")
+
+    # 1. Fetch user's subscription
+    res = await db.execute(
+        select(Subscription).where(Subscription.user_id == user.id)
+    )
+    sub = res.scalar_one_or_none()
+    plan = sub.plan if sub else "free"
+
+    # 2. Check if this is a guest user (email ends with @guest.tubechat.ai)
+    is_guest = is_guest_user(user.email)
+
+    # 3. Determine the video limit
+    if plan == "pro":
+        limit = 15
+    else:
+        limit = 2
+
+    # 4. Check if the user already has a session for this video
+    # First find the video if it exists
+    res = await db.execute(select(Video).where(Video.youtube_id == youtube_id))
+    video = res.scalar_one_or_none()
+
+    session = None
+    if video:
+        # Check if user has a session for it
+        res = await db.execute(
+            select(ChatSession)
+            .where(ChatSession.user_id == user.id, ChatSession.video_id == video.id)
+            .limit(1)
+        )
+        session = res.scalar_one_or_none()
+
+    # 5. If they don't have a session, enforce the limit
+    if not session:
+        # Count distinct videos the user has sessions for
+        res = await db.execute(
+            select(func.count(func.distinct(ChatSession.video_id)))
+            .where(ChatSession.user_id == user.id)
+        )
+        count = res.scalar_one_or_none() or 0
+        if count >= limit:
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "code": "VIDEO_LIMIT_REACHED",
+                    "message": f"You have reached the maximum limit of {limit} videos on the {plan} plan. Please upgrade to index more videos.",
+                    "upgrade_required": True,
+                },
+            )
+
+    # 6. Index the video using existing function if it wasn't indexed yet
+    if not video:
+        video = await index_video(url, db)
+
+    # 7. Create a chat session if one doesn't exist
+    if not session:
+        session = ChatSession(
+            user_id=user.id,
+            video_id=video.id,
+            title="New Chat",
+        )
+        db.add(session)
+        try:
+            await db.commit()
+            await db.refresh(session)
+        except Exception:
+            await db.rollback()
+            raise
+
+    return video, session
+

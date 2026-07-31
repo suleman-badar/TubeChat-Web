@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { initializePaddle } from "@paddle/paddle-js";
 import { getBillingConfig } from "../services/api";
 import { Sparkles, Database, MessageSquare, Zap, CheckCircle2, Loader2 } from "lucide-react";
+import { useAuth } from "../contexts/AppContext";
 
 const POLL_INTERVAL_MS = 2000;
 const POLL_TIMEOUT_MS = 15000;
@@ -10,6 +11,7 @@ const REDIRECT_DELAY_MS = 4000;
 
 export function PricingPage() {
     const navigate = useNavigate();
+    const { user, isLoading: authLoading } = useAuth();
     const [paddle, setPaddle] = useState(null);
     const [config, setConfig] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -18,20 +20,30 @@ export function PricingPage() {
     const redirectTimerRef = useRef(null);
 
     useEffect(() => {
-        async function setup() {
-            const { data } = await getBillingConfig();
-            setConfig(data);
+        if (authLoading) return;
+        if (!user || user.is_guest) {
+            navigate("/", { replace: true });
+            return;
+        }
 
-            const paddleInstance = await initializePaddle({
-                environment: data.environment,
-                token: data.client_side_token,
-                eventCallback: (event) => {
-                    if (event.name === "checkout.completed") {
-                        startConfirmingPro();
-                    }
-                },
-            });
-            setPaddle(paddleInstance);
+        async function setup() {
+            try {
+                const { data } = await getBillingConfig();
+                setConfig(data);
+
+                const paddleInstance = await initializePaddle({
+                    environment: data.environment,
+                    token: data.client_side_token,
+                    eventCallback: (event) => {
+                        if (event.name === "checkout.completed") {
+                            startConfirmingPro();
+                        }
+                    },
+                });
+                setPaddle(paddleInstance);
+            } catch (err) {
+                console.error("Failed to load billing config:", err);
+            }
         }
         setup();
 
@@ -39,7 +51,7 @@ export function PricingPage() {
             clearInterval(pollTimerRef.current);
             clearTimeout(redirectTimerRef.current);
         };
-    }, []);
+    }, [authLoading, user, navigate]);
 
     // Poll the backend until the webhook has actually updated plan to "pro",
     // instead of trusting the client-side checkout event alone.
@@ -76,6 +88,14 @@ export function PricingPage() {
     }
 
     const isPro = config?.plan === "pro";
+
+    if (authLoading || !user || user.is_guest) {
+        return (
+            <div className="min-h-screen bg-tc-bg text-tc-text flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-tc-accent" />
+            </div>
+        );
+    }
 
     // Payment done client-side, waiting for our backend/webhook to confirm
     if (confirming) {

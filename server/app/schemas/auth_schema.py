@@ -32,7 +32,10 @@ class UserMeResponse(BaseModel):
     id: UUID
     email: EmailStr
     created_at: datetime
+    is_guest: bool = False
 
     model_config = {
         "from_attributes": True,
     }
+
+

@@ -15,6 +15,7 @@ class IndexVideoResponse(BaseModel):
     id: UUID
     youtube_id: str
     indexed_at: datetime
+    session_id: UUID | None = None
 
     model_config = {"from_attributes": True}
 

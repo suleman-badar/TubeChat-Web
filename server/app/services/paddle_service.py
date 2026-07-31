@@ -62,22 +62,53 @@ async def handle_paddle_webhook(
         our_user_id = data.get("custom_data", {}).get("user_id")
         print("OUR_USER_ID FROM PADDLE:", repr(our_user_id), type(our_user_id))
 
+        # 1. Verify user exists in the database
+        from app.database.models.user_model import User
+        res_user = await db.execute(
+            select(User).where(User.id == our_user_id)
+        )
+        db_user = res_user.scalar_one_or_none()
+        if not db_user:
+            print(f"User {our_user_id} not found in database. Skipping webhook.")
+            return {"status": "user_not_found"}
+
+        # 2. Check if the purchased item's price ID matches PADDLE_PRO_PRICE_ID
+        items = data.get("items", [])
+        has_pro_price = False
+        pro_price_id = os.environ.get("PADDLE_PRO_PRICE_ID")
+        
+        for item in items:
+            price_id = item.get("price", {}).get("id")
+            if price_id == pro_price_id:
+                has_pro_price = True
+                break
+
+        target_plan = "free"
+        if status == "active" and has_pro_price:
+            target_plan = "pro"
+
+        # 3. Get or dynamically create the subscription row
         res = await db.execute(
             select(Subscription).where(Subscription.user_id == our_user_id)
         )
         subscription = res.scalar_one_or_none()
         print("SUBSCRIPTION FOUND:", subscription)
 
-        if subscription:
-            subscription.paddle_subscription_id = paddle_subscription_id
-            subscription.paddle_customer_id = paddle_customer_id
-            subscription.status = status
-            subscription.plan = "pro" if status == "active" else "free"
-            if current_period_end:
-                subscription.current_period_end = datetime.fromisoformat(
-                    current_period_end.replace("Z", "+00:00")
-                )
-            await db.commit()
+        if not subscription:
+            subscription = Subscription(user_id=our_user_id, plan="free", status="none")
+            db.add(subscription)
+            await db.flush()
+
+        # 4. Update the subscription details
+        subscription.paddle_subscription_id = paddle_subscription_id
+        subscription.paddle_customer_id = paddle_customer_id
+        subscription.status = status
+        subscription.plan = target_plan
+        if current_period_end:
+            subscription.current_period_end = datetime.fromisoformat(
+                current_period_end.replace("Z", "+00:00")
+            )
+        await db.commit()
 
     elif event_type == "subscription.cancelled":
         paddle_subscription_id = data.get("id")

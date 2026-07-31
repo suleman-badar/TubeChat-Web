@@ -60,7 +60,36 @@ export function NavRail({ youtubeId, plan }) {
 
       {/* Plan card */}
       {
-        plan === "free" ? (
+        user?.is_guest ? (
+          <div className="px-3 pb-3">
+            <div className="rounded-xl border border-tc-border bg-gradient-to-b from-tc-surface-2 to-tc-surface p-3.5">
+              <p className="text-[11px] uppercase tracking-wider text-tc-muted-2">
+                Anonymous Session
+              </p>
+
+              <div className="mt-1 flex items-center gap-2">
+                <LogIn
+                  className="h-4 w-4 text-tc-accent"
+                  strokeWidth={2}
+                />
+                <span className="text-[15px] text-tc-text">Guest Mode</span>
+              </div>
+
+              <p className="mt-1.5 text-[12px] leading-snug text-tc-muted-2">
+                Create an account to save your chat history and unlock higher limits.
+              </p>
+
+              <button
+                type="button"
+                onClick={() => navigate("/login")}
+                className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-tc-accent/40 bg-tc-accent/10 px-3 py-2 text-[13px] text-tc-accent transition-colors hover:bg-tc-accent/20"
+              >
+                Sign Up / Log In
+                <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.2} />
+              </button>
+            </div>
+          </div>
+        ) : plan === "free" ? (
           <div className="px-3 pb-3">
             <div className="rounded-xl border border-tc-border bg-gradient-to-b from-tc-surface-2 to-tc-surface p-3.5">
               <p className="text-[11px] uppercase tracking-wider text-tc-muted-2">
@@ -119,7 +148,7 @@ export function NavRail({ youtubeId, plan }) {
       }
       {/* Auth */}
       <div className="border-t border-tc-border p-3">
-        {user ? (
+        {user && !user.is_guest ? (
           <button
             type="button"
             onClick={logout}

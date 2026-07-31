@@ -16,6 +16,7 @@ import {
   chatStream,
   getChatSession,
   getVideoChatSessions,
+  getBillingConfig,
 } from "../services/api";
 
 function formatError(error) {
@@ -39,7 +40,7 @@ export function ChatPage({ navigate }) {
   const [apiError, setApiError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [plan, setPlan] = useState("Free");
+  const [plan, setPlan] = useState("free");
 
   const {
     register,
@@ -55,16 +56,22 @@ export function ChatPage({ navigate }) {
   const { user } = useAuth(); // Access user from AuthContext
 
   useEffect(() => {
+    // Guest users are always on the free plan — no billing call needed
+    if (!user || user.is_guest) {
+      setPlan("free");
+      return;
+    }
     async function getPlan() {
       try {
         const { data } = await getBillingConfig();
         setPlan(data.plan.toLowerCase());
       } catch (error) {
         console.error("Error fetching billing config:", error);
+        setPlan("free"); // safe default on error
       }
     }
     getPlan();
-  }, []);
+  }, [user]); // re-run whenever the auth user changes (login / logout)
 
 
   // Sync youtubeId when URL query changes

@@ -56,8 +56,23 @@ export async function chatStream({
     return;
   }
 
-  if (!response.ok || !response.body) {
-    onError?.(`Request failed with status ${response.status}`);
+  if (!response.ok) {
+    let errorMsg = `Request failed with status ${response.status}`;
+    try {
+      const error = await response.json();
+      const detail = error?.detail || error?.details;
+      if (detail) {
+        errorMsg = typeof detail === "string" ? detail : (detail.message || errorMsg);
+      }
+    } catch (e) {
+      // Response was not JSON or parsing failed
+    }
+    onError?.(errorMsg);
+    return;
+  }
+
+  if (!response.body) {
+    onError?.("Response body is null");
     return;
   }
 
@@ -133,7 +148,7 @@ export async function getRecentChatSessions() {
 }
 
 export async function loginUser(email, password) {
-  const {data} = await api.post('/auth/login', { email, password })
+  const { data } = await api.post('/auth/login', { email, password })
   return data
 }
 
@@ -155,7 +170,7 @@ export async function getCurrentUser() {
 
 
 export async function getBillingConfig() {
-  const  data  = await api.get('/billing/config');
+  const data = await api.get('/billing/config');
   console.log("Billing config data: API", data);
   return data;
 }

@@ -21,6 +21,11 @@ JWT_ALGORITHM = "HS256"
 JWT_EXPIRY_DAYS = 7
 
 
+def is_guest_user(email: str) -> bool:
+    """Return True if the email belongs to an auto-generated guest account."""
+    return email.endswith("@guest.tubechat.ai")
+
+
 def create_jwt_token(user_id: UUID) -> str:
     """Create a signed JWT with the user's ID as subject, valid for JWT_EXPIRY_DAYS."""
     payload = {
@@ -94,3 +99,29 @@ async def get_user_by_id(user_id: UUID, db: AsyncSession) -> User:
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+
+async def create_guest_user(db: AsyncSession) -> User:
+    import uuid
+    from app.database.models.subscription_model import Subscription
+    guest_uuid = uuid.uuid4()
+    guest_email = f"guest_{guest_uuid}@guest.tubechat.ai"
+    # Use a dummy secure random password for guest users
+    random_password = str(uuid.uuid4())
+    hashed_password = bcrypt.hashpw(random_password.encode(), bcrypt.gensalt()).decode()
+    user = User(id=guest_uuid, email=guest_email, hashed_password=hashed_password)
+    db.add(user)
+    
+    # Auto-create free subscription for the guest user
+    subscription = Subscription(user_id=user.id, plan="free", status="none")
+    db.add(subscription)
+    
+    try:
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
+    
+    await db.refresh(user)
+    return user
+
