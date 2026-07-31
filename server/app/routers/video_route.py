@@ -26,7 +26,7 @@ def _set_auth_cookie(response: Response, token: str):
         value=token,
         httponly=True,
         secure=True,
-        samesite="lax",
+        samesite="None",
         max_age=COOKIE_MAX_AGE,
         path="/",
     )
@@ -69,4 +69,3 @@ async def get_video_sessions(
     db: AsyncSession = Depends(get_db),
 ):
     return await get_video_chat_sessions(youtube_id, current_user, db)
-
