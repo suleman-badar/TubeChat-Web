@@ -1,15 +1,17 @@
 import os
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableLambda, RunnableParallel
+from langchain_aws import BedrockEmbeddings
 from dotenv import load_dotenv
 
 load_dotenv()
 
 
 def build_embeddings():
-    return HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    return BedrockEmbeddings(
+        model="amazon.titan-embed-text-v2", region_name=os.getenv("us-east-1")
+    )
 
 
 def build_prompt():
