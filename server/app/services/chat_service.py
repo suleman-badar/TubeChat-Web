@@ -3,7 +3,7 @@ import json
 from sqlalchemy import func, select
 from typing import AsyncGenerator
 
-from langchain_openai import ChatOpenAI
+from langchain_core.language_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
 
 from fastapi import HTTPException
@@ -151,7 +151,7 @@ async def validate_limits(
 async def stream_message(
     request: ChatRequest,
     db: AsyncSession,
-    llm: ChatOpenAI,
+    llm: BaseChatModel,
     prompt: ChatPromptTemplate,
     user: User | None = None,
 ) -> AsyncGenerator[str, None]:

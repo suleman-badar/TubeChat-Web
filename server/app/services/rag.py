@@ -1,5 +1,7 @@
 import os
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.language_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableLambda, RunnableParallel
 from dotenv import load_dotenv
@@ -35,15 +37,15 @@ def build_prompt():
     )
 
 
-def build_llm() -> ChatOpenAI:
-    """Return a cached ChatOpenAI instance for RAG."""
-    return ChatOpenAI(
-        model=os.getenv("OPENAI_MODEL", "openai.gpt-oss-20b"),
+def build_llm() -> ChatGoogleGenerativeAI:
+    """Return a Gemini Flash instance for RAG."""
+    return ChatGoogleGenerativeAI(
+        model=os.getenv("GOOGLE_MODEL", "gemini-2.0-flash"),
         temperature=0,
     )
 
 
-def create_rag_pipeline(retriever, llm: ChatOpenAI, prompt: ChatPromptTemplate):
+def create_rag_pipeline(retriever, llm: BaseChatModel, prompt: ChatPromptTemplate):
     """Create a simple LCEL RAG pipeline that formats context+question and calls the LLM."""
 
     question = RunnableLambda(lambda inputs: inputs["question"])

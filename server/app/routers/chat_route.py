@@ -2,7 +2,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from langchain_openai import ChatOpenAI
+from langchain_core.language_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
 
 from app.dependencies.db_dependency import get_db
@@ -32,7 +32,7 @@ async def send_stream_route(
     req: Request,
     db: AsyncSession = Depends(get_db),
     user: User | None = Depends(get_optional_user),
-    llm: ChatOpenAI = Depends(get_llm),
+    llm: BaseChatModel = Depends(get_llm),
     prompt: ChatPromptTemplate = Depends(get_prompt),
 ):
     await validate_limits(request, db, user, client_ip=req.client.host)
