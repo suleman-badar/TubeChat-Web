@@ -17,7 +17,7 @@ def fetch_transcript(youtube_id: str):
 
 def split_transcript(transcript, youtube_id: str) -> list[Document]:
     """Split transcript into chunks."""
-    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=3000, chunk_overlap=300)
     full_text = " ".join(snippet.text for snippet in transcript)
     doc = [
         Document(

@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 import logging
 import os
+import asyncio
 
 logger = logging.getLogger(__name__)
 vector_store: PGVector | None = None
@@ -43,14 +44,37 @@ def get_vector_store() -> PGVector:
     return vector_store
 
 
-async def index_transcript(chunks: list[Document]) -> None:
-    """Index a video transcript in the PGVector vector store."""
+async def index_transcript(chunks: list[Document], batch_size: int = 5, delay_seconds: float = 1.0) -> None:
+    """Index a video transcript in the PGVector vector store with batching and rate-limit retries."""
 
     if not chunks:
         raise ValueError("No transcript chunks to index.")
 
     vector_store = get_vector_store()
-    await vector_store.aadd_documents(chunks)
+
+    # Process in small batches to respect provider rate limits (e.g. 15 RPM for free tiers)
+    for i in range(0, len(chunks), batch_size):
+        batch = chunks[i : i + batch_size]
+        
+        # Retry with exponential backoff on 429 / Rate Limit errors
+        for attempt in range(5):
+            try:
+                await vector_store.aadd_documents(batch)
+                break
+            except Exception as e:
+                err_str = str(e).lower()
+                if "429" in err_str or "throttl" in err_str or "resource_exhausted" in err_str or "too many requests" in err_str:
+                    wait_time = (2 ** attempt) + 1
+                    logger.warning(
+                        f"Rate limited during embedding indexing. Retrying in {wait_time}s... (Attempt {attempt + 1}/5)"
+                    )
+                    await asyncio.sleep(wait_time)
+                else:
+                    raise e
+        
+        # Pause briefly between batches
+        if i + batch_size < len(chunks):
+            await asyncio.sleep(delay_seconds)
 
     logger.info(f"Indexed {len(chunks)} transcript chunks in PGVector vector store.")
 
