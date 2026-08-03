@@ -1,18 +1,15 @@
 import os
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableLambda, RunnableParallel
-from langchain_aws import BedrockEmbeddings
 from dotenv import load_dotenv
 
 load_dotenv()
 
 
+
 def build_embeddings():
-    return BedrockEmbeddings(
-        model_id="amazon.titan-embed-text-v2:0",
-        region_name=os.getenv("AWS_REGION", "us-east-1"),
-    )
+    return OpenAIEmbeddings(model="text-embedding-3-small")
 
 
 def build_prompt():
