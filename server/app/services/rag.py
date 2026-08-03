@@ -1,6 +1,5 @@
 import os
-from langchain_openai import OpenAIEmbeddings
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_core.language_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableLambda, RunnableParallel
@@ -11,7 +10,7 @@ load_dotenv()
 
 
 def build_embeddings():
-    return OpenAIEmbeddings(model="text-embedding-3-small")
+    return GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
 
 
 def build_prompt():
