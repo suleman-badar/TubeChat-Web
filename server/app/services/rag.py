@@ -10,7 +10,7 @@ load_dotenv()
 
 
 def build_embeddings():
-    return GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
+    return GoogleGenerativeAIEmbeddings(model="text-embedding-004")
 
 
 def build_prompt():
