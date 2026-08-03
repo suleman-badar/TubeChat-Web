@@ -1,9 +1,9 @@
 from fastapi import Request
-from langchain_openai import ChatOpenAI
+from langchain_core.language_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
 
 
-def get_llm(request: Request) -> ChatOpenAI:
+def get_llm(request: Request) -> BaseChatModel:
     """Retrieve the LLM instance from the FastAPI app state."""
     return request.app.state.llm
 
