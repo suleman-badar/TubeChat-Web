@@ -1,16 +1,17 @@
 import os
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_groq import ChatGroq
 from langchain_core.language_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableLambda, RunnableParallel
+
 from dotenv import load_dotenv
 
 load_dotenv()
 
 
-
 def build_embeddings():
-    return GoogleGenerativeAIEmbeddings(model="text-embedding-004")
+    return GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
 
 
 def build_prompt():
@@ -36,10 +37,10 @@ def build_prompt():
     )
 
 
-def build_llm() -> ChatGoogleGenerativeAI:
-    """Return a Gemini Flash instance for RAG."""
-    return ChatGoogleGenerativeAI(
-        model=os.getenv("GOOGLE_MODEL", "gemini-2.0-flash"),
+def build_llm() -> BaseChatModel:
+    """Return a ChatGroq instance for RAG."""
+    return ChatGroq(
+        model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
         temperature=0,
     )
 
