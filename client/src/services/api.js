@@ -171,6 +171,6 @@ export async function getCurrentUser() {
 
 export async function getBillingConfig() {
   const data = await api.get('/billing/config');
-  console.log("Billing config data: API", data);
+  // console.log("Billing config data: API", data);
   return data;
 }
