@@ -2,6 +2,8 @@
 
 <img src="https://img.shields.io/badge/TubeChat-AI%20Video%20Assistant-6C63FF?style=for-the-badge&logo=youtube&logoColor=white" alt="TubeChat Banner" />
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/suleman-badar/TubeChat-Web)
+
 # TubeChat
 
 ### Chat with any YouTube video using AI. Instantly.
