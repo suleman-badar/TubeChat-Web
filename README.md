@@ -6,7 +6,7 @@
 
 ### Chat with any YouTube video using AI. Instantly.
 
-[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.139-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-PGVector-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org)
@@ -31,10 +31,10 @@ TubeChat turns any YouTube video into an interactive AI assistant. Paste a video
 - ** Instant Video Indexing** — Paste any YouTube URL and TubeChat extracts & indexes the full transcript in seconds
 - ** Context-Aware Chat** — Ask questions and get answers grounded in what the video actually says
 - ** Real-Time Streaming** — AI responses stream live, token by token, for a fast and fluid experience
-- ** Guest Mode** — Try it immediately without creating an account (20 messages & 2 videos on trial)
+- ** Guest Mode** — Try it immediately without creating an account (8 messages per chat session, plus IP-based limits of 20 messages and 2 videos per 24 hours)
 - ** Secure Accounts** — Register to save your chat history across sessions and devices
 - ** Session History** — Return to any previous conversation with any video you've indexed
-- ** Pro Plan** — Unlock higher limits via seamless in-app subscription powered by Paddle
+- ** Pro Plan** — Increase limits to 100 messages per session and 15 videos via an in-app Paddle subscription
 - ** Conversation Memory** — The AI remembers context within a session for natural back-and-forth dialogue
 
 ---
@@ -78,11 +78,11 @@ Whether you're a student revisiting lecture content, a professional skimming con
 
 | Layer | Technology |
 |---|---|
-| **Frontend** | React 18, Vite, Vanilla CSS |
+| **Frontend** | React 19, Vite, Tailwind CSS via `@tailwindcss/vite` |
 | **Backend** | FastAPI (Python 3.11) |
 | **Database** | PostgreSQL + PGVector (Neon) |
 | **AI — LLM** | Groq (Llama 3.3 70B) |
-| **AI — Embeddings** | Google Generative AI (embedding-001) |
+| **AI — Embeddings** | Google Generative AI (`models/gemini-embedding-001`) |
 | **Authentication** | JWT (HTTP-Only Cookies) + Bcrypt |
 | **Payments** | Paddle |
 | **Frontend Hosting** | Vercel |
@@ -143,25 +143,33 @@ Create a `.env` file inside the `server/` directory:
 DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/tubechat
 
 # Authentication
-JWT_SECRET=your-super-secret-jwt-key-min-32-characters
+JWT_SECRET_KEY=your-super-secret-jwt-key
 
 # AI Services
 GOOGLE_API_KEY=your-google-ai-studio-key
 GROQ_API_KEY=your-groq-cloud-api-key
 
+# Transcript provider (Supadata is tried first; YouTube is the fallback)
+SUPADATA_API_KEY=your-supadata-api-key
+
 # Payments (optional — only needed for Pro plan)
 PADDLE_WEBHOOK_SECRET=your-paddle-webhook-secret
 PADDLE_PRO_PRICE_ID=your-paddle-price-id
+PADDLE_CLIENT_SIDE_TOKEN=your-paddle-client-side-token
+PADDLE_ENVIRONMENT=sandbox
 ```
 
 | Variable | Required | Where to Get It |
 |---|---|---|
 | `DATABASE_URL` | ✅ Yes | Your PostgreSQL instance |
-| `JWT_SECRET` | ✅ Yes | Any 32+ char random string |
+| `JWT_SECRET_KEY` | ✅ Yes | Any strong random string |
 | `GOOGLE_API_KEY` | ✅ Yes | [aistudio.google.com](https://aistudio.google.com) — Free |
 | `GROQ_API_KEY` | ✅ Yes | [console.groq.com](https://console.groq.com) — Free |
-| `PADDLE_WEBHOOK_SECRET` | ⚡ Optional | [Paddle Dashboard](https://vendors.paddle.com) |
-| `PADDLE_PRO_PRICE_ID` | ⚡ Optional | [Paddle Dashboard](https://vendors.paddle.com) |
+| `SUPADATA_API_KEY` | ✅ Recommended | [Supadata](https://supadata.ai) |
+| `PADDLE_WEBHOOK_SECRET` | ✅ For Paddle webhooks | [Paddle Dashboard](https://vendors.paddle.com) |
+| `PADDLE_PRO_PRICE_ID` | ✅ For Pro checkout | [Paddle Dashboard](https://vendors.paddle.com) |
+| `PADDLE_CLIENT_SIDE_TOKEN` | ✅ For Pro checkout | [Paddle Dashboard](https://vendors.paddle.com) |
+| `PADDLE_ENVIRONMENT` | Optional | `sandbox` by default |
 
 ### Frontend (`client/.env`)
 
@@ -252,13 +260,16 @@ The backend exposes a RESTful API. Base URL: `http://localhost:8000`
 | `POST` | `/auth/login` | Log in | No |
 | `POST` | `/auth/logout` | Log out | No |
 | `GET` | `/auth/me` | Get current user | Yes |
-| `POST` | `/video/index` | Index a YouTube video | Optional |
+| `POST` | `/video/index` | Index a YouTube video and create/reuse a chat session | Optional |
 | `GET` | `/video/{id}/chat-sessions` | Get sessions for a video | Optional |
 | `POST` | `/chat/messages/stream` | Stream an AI response | Optional |
 | `GET` | `/chat/recent-sessions` | Get recent chat sessions | Optional |
-| `GET` | `/billing/config` | Get current plan details | Yes |
+| `GET` | `/billing/config` | Get current plan and Paddle checkout configuration | Yes |
+| `POST` | `/paddle/webhook` | Process a signed Paddle subscription webhook | Paddle signature |
 
 > Full interactive API docs available at `/docs` when the backend is running.
+
+`POST /video/index` returns `{ id, youtube_id, indexed_at, session_id }`. Registration and login return a message and set the `access_token` cookie; `/auth/me` returns the current user, creating a guest user and cookie when none exists.
 
 ---
 
@@ -279,7 +290,7 @@ The backend exposes a RESTful API. Base URL: `http://localhost:8000`
 3. Configure:
    - **Build Command**: `pip install -r requirements.txt`
    - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-   - **Python Version**: `3.11.9`
+      - **Python Version**: `3.11.13`
 4. Add all backend environment variables in the **Environment** tab.
 5. Deploy.
 
@@ -312,9 +323,9 @@ Contributions are welcome! Here's how to get started:
 |---|---|
 | ✅ | YouTube video ingestion & RAG chat |
 | ✅ | Real-time response streaming |
-| ✅ | Guest mode with IP rate limiting |
+| ✅ | Guest mode with IP and per-session rate limiting |
 | ✅ | User accounts & session history |
-| ✅ | Paddle subscription integration |
+| ✅ | Paddle subscription integration with webhook verification |
 | 🔄 | PDF document support |
 | 🔄 | Website URL support |
 | 🔄 | Multi-language transcript support |
