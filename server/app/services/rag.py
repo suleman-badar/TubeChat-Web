@@ -40,7 +40,7 @@ def build_prompt():
 def build_llm() -> BaseChatModel:
     """Return a ChatGroq instance for RAG."""
     return ChatGroq(
-        model=os.getenv("GROQ_MODEL", "llama-3.1-8b-instant"),
+        model=os.getenv("GROQ_MODEL", "openai/gpt-oss-20b"),
         temperature=0,
     )
 

@@ -83,7 +83,7 @@ Whether you're a student revisiting lecture content, a professional skimming con
 | **Frontend** | React 19, Vite, Tailwind CSS via `@tailwindcss/vite` |
 | **Backend** | FastAPI (Python 3.11) |
 | **Database** | PostgreSQL + PGVector (Neon) |
-| **AI — LLM** | Groq (`llama-3.1-8b-instant` by default; configurable via `GROQ_MODEL`) |
+| **AI — LLM** | Groq (`openai/gpt-oss-20b` by default; configurable via `GROQ_MODEL`) |
 | **AI — Embeddings** | Google Generative AI (`models/gemini-embedding-001`) |
 | **Authentication** | JWT (HTTP-Only Cookies) + Bcrypt |
 | **Payments** | Paddle |
@@ -150,7 +150,7 @@ JWT_SECRET_KEY=your-super-secret-jwt-key
 # AI Services
 GOOGLE_API_KEY=your-google-ai-studio-key
 GROQ_API_KEY=your-groq-cloud-api-key
-GROQ_MODEL=llama-3.1-8b-instant
+GROQ_MODEL=openai/gpt-oss-20b
 
 # Transcript provider (Supadata is tried first; YouTube is the fallback)
 SUPADATA_API_KEY=your-supadata-api-key
