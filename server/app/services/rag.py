@@ -40,7 +40,7 @@ def build_prompt():
 def build_llm() -> BaseChatModel:
     """Return a ChatGroq instance for RAG."""
     return ChatGroq(
-        model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+        model=os.getenv("GROQ_MODEL", "llama-3.1-8b-instant"),
         temperature=0,
     )
 
