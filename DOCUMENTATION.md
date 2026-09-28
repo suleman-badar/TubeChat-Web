@@ -153,7 +153,7 @@ Guest sessions return an empty message list from session retrieval and guest use
 6. `GoogleGenerativeAIEmbeddings` uses `models/gemini-embedding-001`; the PGVector collection is `youtube_transcripts`.
 7. A PostgreSQL `Video` row is created if needed, and a `ChatSession` titled `New Chat` is created or reused for the user.
 
-For chat, `get_retriever(youtube_id)` uses MMR with `k=5` and a metadata filter for that video. The RAG pipeline combines retrieved text, the last 10 persisted messages, and the question in a `ChatPromptTemplate`, then calls `ChatGroq`. The model defaults to `llama-3.3-70b-versatile` and can be changed with `GROQ_MODEL`.
+For chat, `get_retriever(youtube_id)` uses MMR with `k=5` and a metadata filter for that video. The RAG pipeline combines retrieved text, the last 10 persisted messages, and the question in a `ChatPromptTemplate`, then calls `ChatGroq`. The model defaults to `llama-3.1-8b-instant` and can be changed with `GROQ_MODEL`.
 
 ## 8. Chat Streaming
 

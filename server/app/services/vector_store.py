@@ -34,6 +34,10 @@ def initialize_vector_store() -> None:
         connection=connection_string,
         use_jsonb=True,
         async_mode=True,
+        engine_args={
+            "pool_pre_ping": True,
+            "pool_recycle": 1800,
+        },
     )
     logger.info("PGVector store initialized.")
 
