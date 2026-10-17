@@ -28,6 +28,11 @@ from app.services.rag import create_rag_pipeline
 from app.services.auth_service import is_guest_user
 
 
+def _require_session_access(session: ChatSession, user: User | None) -> None:
+    if user is None or is_guest_user(user.email) or session.user_id != user.id:
+        raise HTTPException(status_code=404, detail="Chat session not found.")
+
+
 async def validate_limits(
     request: ChatRequest,
     db: AsyncSession,
@@ -38,10 +43,11 @@ async def validate_limits(
     is_guest = True
     if user:
         is_guest = is_guest_user(user.email)
-    
+
     if is_guest and client_ip:
         from app.services.rate_limit_service import check_and_record_message_limit
-        check_and_record_message_limit(client_ip)
+
+        await check_and_record_message_limit(client_ip)
 
     if request.session_id:
         res = await db.execute(
@@ -56,6 +62,8 @@ async def validate_limits(
                 status_code=404,
                 detail="Stream Chat session not found.",
             )
+
+        _require_session_access(session, user)
 
         res = await db.execute(
             select(func.count(Message.id)).where(
@@ -173,6 +181,7 @@ async def stream_message(
                 status_code=404,
                 detail="Stream Chat session not found.",
             )
+        _require_session_access(session, user)
         video = session.video
 
     # ---------------------------------------------------------
@@ -272,6 +281,8 @@ async def get_chat_session(
     session = res.scalar_one_or_none()
     if session is None:
         raise HTTPException(status_code=404, detail="Chat session not found.")
+
+    _require_session_access(session, user)
 
     is_guest = False
     if user:

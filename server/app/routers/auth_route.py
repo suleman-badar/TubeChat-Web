@@ -16,6 +16,7 @@ from app.services.auth_service import (
 )
 from app.dependencies.auth_dependency import get_current_user, get_optional_user
 from app.dependencies.db_dependency import get_db
+from app.dependencies.security_dependency import require_csrf
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -41,6 +42,7 @@ async def register(
     request: UserRegisterRequest,
     response: Response,
     db: AsyncSession = Depends(get_db),
+    _: None = Depends(require_csrf),
 ):
     user = await register_user(request, db)
     token = create_jwt_token(user.id)
@@ -53,6 +55,7 @@ async def login(
     request: UserLoginRequest,
     response: Response,
     db: AsyncSession = Depends(get_db),
+    _: None = Depends(require_csrf),
 ):
     user = await login_user(request, db)
     token = create_jwt_token(user.id)
@@ -61,7 +64,7 @@ async def login(
 
 
 @router.post("/logout")
-def logout(response: Response):
+def logout(response: Response, _: None = Depends(require_csrf)):
     response.delete_cookie(
         key=COOKIE_NAME,
         httponly=True,
