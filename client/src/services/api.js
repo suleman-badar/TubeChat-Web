@@ -8,16 +8,28 @@ const api = axios.create({
   withCredentials: true,
 });
 
-function getCsrfToken() {
-  const cookie = document.cookie
-    .split("; ")
-    .find((value) => value.startsWith("csrf_token="));
-  return cookie ? decodeURIComponent(cookie.split("=").slice(1).join("=")) : null;
+let csrfToken = null;
+
+async function ensureCsrfToken() {
+  if (csrfToken) return csrfToken;
+
+  const response = await fetch(`${API_BASE_URL}/auth/csrf`, {
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error("Unable to initialize CSRF protection");
+  }
+
+  const data = await response.json();
+  csrfToken = data.csrf_token;
+  return csrfToken;
 }
 
-api.interceptors.request.use((config) => {
-  const csrfToken = getCsrfToken();
-  if (csrfToken) config.headers["X-CSRF-Token"] = csrfToken;
+api.interceptors.request.use(async (config) => {
+  const method = config.method?.toLowerCase();
+  if (["post", "put", "patch", "delete"].includes(method)) {
+    config.headers["X-CSRF-Token"] = await ensureCsrfToken();
+  }
   return config;
 });
 
@@ -57,11 +69,12 @@ export async function chatStream({
 
   let response;
   try {
+    const token = await ensureCsrfToken();
     response = await fetch(`${API_BASE_URL}/chat/messages/stream`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(getCsrfToken() ? { "X-CSRF-Token": getCsrfToken() } : {}),
+        "X-CSRF-Token": token,
       },
       credentials: "include", // equivalent of axios's withCredentials
       body: JSON.stringify(payload),

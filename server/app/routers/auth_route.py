@@ -1,3 +1,5 @@
+import secrets
+
 from fastapi import APIRouter, Depends, Response, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,12 +18,13 @@ from app.services.auth_service import (
 )
 from app.dependencies.auth_dependency import get_current_user, get_optional_user
 from app.dependencies.db_dependency import get_db
-from app.dependencies.security_dependency import require_csrf
+from app.dependencies.security_dependency import CSRF_COOKIE_NAME, require_csrf
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 COOKIE_NAME = "access_token"
 COOKIE_MAX_AGE = 7 * 24 * 60 * 60  # 7 days in seconds
+CSRF_COOKIE_MAX_AGE = 7 * 24 * 60 * 60
 
 
 def _set_auth_cookie(response: Response, token: str):
@@ -35,6 +38,25 @@ def _set_auth_cookie(response: Response, token: str):
         max_age=COOKIE_MAX_AGE,
         path="/",
     )
+
+
+def _set_csrf_cookie(response: Response, token: str):
+    response.set_cookie(
+        key=CSRF_COOKIE_NAME,
+        value=token,
+        httponly=False,
+        secure=True,
+        samesite="None",
+        max_age=CSRF_COOKIE_MAX_AGE,
+        path="/",
+    )
+
+
+@router.get("/csrf")
+def csrf_token(request: Request, response: Response):
+    token = request.cookies.get(CSRF_COOKIE_NAME) or secrets.token_urlsafe(32)
+    _set_csrf_cookie(response, token)
+    return {"csrf_token": token}
 
 
 @router.post("/register")
