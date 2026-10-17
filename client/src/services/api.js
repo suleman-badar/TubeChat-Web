@@ -8,6 +8,19 @@ const api = axios.create({
   withCredentials: true,
 });
 
+function getCsrfToken() {
+  const cookie = document.cookie
+    .split("; ")
+    .find((value) => value.startsWith("csrf_token="));
+  return cookie ? decodeURIComponent(cookie.split("=").slice(1).join("=")) : null;
+}
+
+api.interceptors.request.use((config) => {
+  const csrfToken = getCsrfToken();
+  if (csrfToken) config.headers["X-CSRF-Token"] = csrfToken;
+  return config;
+});
+
 
 // --------------------
 // Video APIs
@@ -46,7 +59,10 @@ export async function chatStream({
   try {
     response = await fetch(`${API_BASE_URL}/chat/messages/stream`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(getCsrfToken() ? { "X-CSRF-Token": getCsrfToken() } : {}),
+      },
       credentials: "include", // equivalent of axios's withCredentials
       body: JSON.stringify(payload),
       signal,

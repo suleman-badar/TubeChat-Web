@@ -1,60 +1,83 @@
-import time
-from collections import defaultdict
+from datetime import datetime, timedelta, timezone
+
 from fastapi import HTTPException
+from sqlalchemy import text
 
-# In-memory stores: ip -> list of timestamps
-_message_limits = defaultdict(list)
-_video_limits = defaultdict(list)
+from app.dependencies.db_dependency import AsyncSessionLocal
 
-# Limits configuration
-GUEST_MSG_LIMIT = 20    # max messages per 24 hours per IP for guests
-GUEST_VIDEO_LIMIT = 2   # max videos indexed per 24 hours per IP for guests
-WINDOW_24H = 86400      # 24 hours in seconds
+GUEST_MSG_LIMIT = 20  # max messages per 24 hours per IP for guests
+GUEST_VIDEO_LIMIT = 2  # max videos indexed per 24 hours per IP for guests
+WINDOW_24H = 86400  # 24 hours in seconds
 
 
-def check_ip_rate_limit(ip: str, store: dict, limit: int, window: int, error_code: str, error_msg: str):
+async def _check_and_record_limit(
+    ip: str,
+    event_type: str,
+    limit: int,
+    error_code: str,
+    error_msg: str,
+) -> None:
     if not ip:
         return
-    now = time.time()
-    # Clean up old timestamps outside the window
-    store[ip] = [t for t in store[ip] if now - t < window]
-    
-    if len(store[ip]) >= limit:
-        raise HTTPException(
-            status_code=429,
-            detail={
-                "code": error_code,
-                "message": error_msg,
-                "upgrade_required": True
-            }
-        )
+
+    cutoff = datetime.now(timezone.utc) - timedelta(seconds=WINDOW_24H)
+    lock_key = f"guest-rate-limit:{event_type}:{ip}"
+
+    async with AsyncSessionLocal() as db:
+        async with db.begin():
+            await db.execute(
+                text("SELECT pg_advisory_xact_lock(hashtext(:lock_key))"),
+                {"lock_key": lock_key},
+            )
+            await db.execute(
+                text(
+                    "DELETE FROM guest_rate_limit_events "
+                    "WHERE event_type = :event_type AND created_at < :cutoff"
+                ),
+                {"event_type": event_type, "cutoff": cutoff},
+            )
+            result = await db.execute(
+                text(
+                    "SELECT COUNT(*) FROM guest_rate_limit_events "
+                    "WHERE ip_address = :ip AND event_type = :event_type "
+                    "AND created_at >= :cutoff"
+                ),
+                {"ip": ip, "event_type": event_type, "cutoff": cutoff},
+            )
+            if result.scalar_one() >= limit:
+                raise HTTPException(
+                    status_code=429,
+                    detail={
+                        "code": error_code,
+                        "message": error_msg,
+                        "upgrade_required": True,
+                    },
+                )
+
+            await db.execute(
+                text(
+                    "INSERT INTO guest_rate_limit_events "
+                    "(ip_address, event_type) VALUES (:ip, :event_type)"
+                ),
+                {"ip": ip, "event_type": event_type},
+            )
 
 
-def record_ip_request(ip: str, store: dict):
-    if not ip:
-        return
-    store[ip].append(time.time())
-
-
-def check_and_record_message_limit(ip: str):
-    check_ip_rate_limit(
+async def check_and_record_message_limit(ip: str) -> None:
+    await _check_and_record_limit(
         ip,
-        _message_limits,
+        "message",
         GUEST_MSG_LIMIT,
-        WINDOW_24H,
         "GUEST_MSG_RATE_LIMIT_EXCEEDED",
-        f"Anonymous trial limit reached ({GUEST_MSG_LIMIT} messages per 24 hours). Please log in or create a registered account to continue chatting."
+        f"Anonymous trial limit reached ({GUEST_MSG_LIMIT} messages per 24 hours). Please log in or create a registered account to continue chatting.",
     )
-    record_ip_request(ip, _message_limits)
 
 
-def check_and_record_video_limit(ip: str):
-    check_ip_rate_limit(
+async def check_and_record_video_limit(ip: str) -> None:
+    await _check_and_record_limit(
         ip,
-        _video_limits,
+        "video",
         GUEST_VIDEO_LIMIT,
-        WINDOW_24H,
         "GUEST_VIDEO_RATE_LIMIT_EXCEEDED",
-        f"Anonymous video indexing limit reached ({GUEST_VIDEO_LIMIT} videos per 24 hours). Please sign up or log in to index more videos."
+        f"Anonymous video indexing limit reached ({GUEST_VIDEO_LIMIT} videos per 24 hours). Please sign up or log in to index more videos.",
     )
-    record_ip_request(ip, _video_limits)

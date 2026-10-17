@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+import secrets
 
 from app.routers.video_route import router as video_router
 from app.routers.chat_route import router as chat_router
@@ -9,6 +10,7 @@ from app.routers.paddle_route import router as paddle_router
 from app.routers.billing_route import router as billing_router
 from app.services.vector_store import initialize_vector_store
 from app.services.rag import build_prompt, build_llm
+from app.dependencies.security_dependency import CSRF_COOKIE_NAME
 
 # Lifespan event to initialize the vector store on startup for just one time
 # rather than creating N instances of the vector store for each request from the user. For details see ARC.md file
@@ -29,6 +31,22 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+
+@app.middleware("http")
+async def csrf_cookie_middleware(request, call_next):
+    response = await call_next(request)
+    if not request.cookies.get(CSRF_COOKIE_NAME):
+        response.set_cookie(
+            key=CSRF_COOKIE_NAME,
+            value=secrets.token_urlsafe(32),
+            httponly=False,
+            secure=True,
+            samesite="None",
+            max_age=7 * 24 * 60 * 60,
+            path="/",
+        )
+    return response
 
 
 app.add_middleware(

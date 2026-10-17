@@ -17,6 +17,7 @@ from app.services.chat_service import (
     get_recent_chat_sessions,
     validate_limits,
 )
+from app.dependencies.security_dependency import require_csrf
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
@@ -34,8 +35,10 @@ async def send_stream_route(
     user: User | None = Depends(get_optional_user),
     llm: BaseChatModel = Depends(get_llm),
     prompt: ChatPromptTemplate = Depends(get_prompt),
+    _: None = Depends(require_csrf),
 ):
-    await validate_limits(request, db, user, client_ip=req.client.host)
+    client_ip = req.client.host if req.client else ""
+    await validate_limits(request, db, user, client_ip=client_ip)
     return StreamingResponse(
         stream_message(request, db, user=user, llm=llm, prompt=prompt),
         media_type="application/x-ndjson",

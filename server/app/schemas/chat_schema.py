@@ -23,6 +23,8 @@ class ChatRequest(BaseModel):
 
     question: str = Field(
         ...,
+        min_length=1,
+        max_length=4000,
         description="The user's question.",
     )
 
@@ -68,5 +70,3 @@ class ChatSessionInfo(BaseModel):
 class ChatSessionResponse(BaseModel):
     session: ChatSessionInfo
     messages: list[MessageResponse]
-
-

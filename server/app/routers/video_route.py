@@ -12,6 +12,7 @@ from app.schemas.video_schema import (
 from app.dependencies.auth_dependency import get_current_user, get_optional_user
 from app.services.auth_service import create_guest_user, create_jwt_token, is_guest_user
 from app.services.rate_limit_service import check_and_record_video_limit
+from app.dependencies.security_dependency import require_csrf
 
 router = APIRouter(prefix="/video", tags=["Videos"])
 
@@ -38,17 +39,19 @@ async def index(
     req: Request,
     response: Response,
     db: AsyncSession = Depends(get_db),
+    _: None = Depends(require_csrf),
 ) -> IndexVideoResponse:
     user = await get_optional_user(req, db)
+    client_ip = req.client.host if req.client else ""
     if not user:
         # Before creating a guest user, verify their IP rate limits
-        check_and_record_video_limit(req.client.host)
+        await check_and_record_video_limit(client_ip)
         user = await create_guest_user(db)
         token = create_jwt_token(user.id)
         _set_auth_cookie(response, token)
     elif is_guest_user(user.email):
         # Existing guest user - enforce IP rate limiting
-        check_and_record_video_limit(req.client.host)
+        await check_and_record_video_limit(client_ip)
 
     video, session = await index_video_for_user(request.video_url, user, db)
     return IndexVideoResponse(
